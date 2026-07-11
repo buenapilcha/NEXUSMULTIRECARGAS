@@ -91,7 +91,7 @@
         <div class="logo-mobile">NEXUS.SYS</div>
         <div class="balance-chip" onclick="goToProfile()">
             <i class="fas fa-wallet" style="color: var(--accent);"></i>
-            <span id="header-balance">USD 0.00</span>
+            <span id="header-balance">0 Puntos</span>
         </div>
     </header>
 
@@ -176,17 +176,30 @@
             <div id="profile-auth-data" style="display: none;">
                 <div class="hero"><h1 style="font-size: 1.8rem;">Tu Perfil.</h1><p id="profile-email">Cargando datos...</p></div>
                 <div class="login-container">
-                    <p style="color: #888; font-size: 0.75rem; text-transform: uppercase; font-weight: 700;">Saldo Actual</p>
-                    <h2 id="profile-balance" style="font-size: 2.2rem; font-weight: 900; margin-bottom: 20px; color: var(--accent);">USD 0.00</h2>
-                    
-                    <div style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; text-align: left; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <p style="color: #777; font-size: 0.75rem; font-weight: 600; margin-bottom: 2px;">Código de Referido</p>
-                            <p id="profile-ref-code" style="font-size: 1.1rem; font-weight: 900;">---</p>
+                    <p style="color: #888; font-size: 0.75rem; text-transform: uppercase; font-weight: 700;">Puntos Acumulados</p>
+                    <h2 id="profile-balance" style="font-size: 2.2rem; font-weight: 900; margin-bottom: 20px; color: var(--accent);">0 Puntos</h2>
+
+                    <div style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; text-align: left;">
+                        <p style="color: #777; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">Tu Nombre de Usuario</p>
+                        <div style="display: flex; gap: 8px;">
+                            <input id="username-input" type="text" maxlength="15" style="flex: 1; background: #111; border: 1px solid #333; color: white; padding: 10px 12px; border-radius: 10px; font-size: 0.95rem; font-weight: 700; outline: none;">
+                            <button id="btn-save-username" style="background: var(--accent); color: #000; border: none; padding: 0 16px; border-radius: 10px; font-weight: 900; font-size: 0.75rem; cursor: pointer;">GUARDAR</button>
                         </div>
-                        <i class="fas fa-copy" style="color: #444; font-size: 1.2rem;"></i>
+                        <p id="username-status" style="font-size: 0.75rem; margin-top: 6px; min-height: 16px;"></p>
                     </div>
-                    
+
+                    <div style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; text-align: left; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" id="btn-copy-ref">
+                        <div>
+                            <p style="color: #777; font-size: 0.75rem; font-weight: 600; margin-bottom: 2px;">Tu Link de Invitación</p>
+                            <p id="profile-ref-code" style="font-size: 0.9rem; font-weight: 900; word-break: break-all;">---</p>
+                        </div>
+                        <i class="fas fa-copy" style="color: #444; font-size: 1.2rem; flex-shrink: 0; margin-left: 10px;"></i>
+                    </div>
+
+                    <button id="btn-share-whatsapp" style="width: 100%; background: #111; border: 1px solid #222; color: white; padding: 12px; border-radius: 12px; margin-bottom: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fab fa-whatsapp" style="color: #25D366;"></i> Compartir por WhatsApp
+                    </button>
+
                     <div style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 25px; text-align: left; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <p style="color: #777; font-size: 0.75rem; font-weight: 600; margin-bottom: 2px;">Total Referidos</p>
@@ -218,7 +231,7 @@
 
     <script type="module">
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { doc, getDoc, setDoc, deleteDoc, runTransaction, collection, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         
         // Importamos auth y db de tu configuración directamente
         import { auth, db } from './firebase-config.js';
@@ -227,6 +240,87 @@
         const profileAuth = document.getElementById('profile-auth-data');
         const historyGuest = document.getElementById('history-guest-prompt');
         const historyAuth = document.getElementById('history-auth-data');
+
+        // --- CONVIERTE UN NOMBRE EN UN USERNAME VÁLIDO (solo minúsculas, números, sin espacios/acentos) ---
+        function slugify(text) {
+            return (text || 'user')
+                .toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // saca acentos
+                .replace(/[^a-z0-9]/g, '')
+                .substring(0, 15) || 'user';
+        }
+
+        // --- RESERVA UN USERNAME DE FORMA ATÓMICA (evita que dos personas se queden con el mismo al mismo tiempo) ---
+        // Usa la colección "usernames" como índice: el ID del documento ES el username,
+        // así Firestore garantiza que no pueda haber dos iguales.
+        async function claimUsername(username, uid) {
+            const refDoc = doc(db, 'usernames', username);
+            return await runTransaction(db, async (transaction) => {
+                const snap = await transaction.get(refDoc);
+                if (snap.exists()) {
+                    throw new Error('TAKEN');
+                }
+                transaction.set(refDoc, { uid: uid });
+                return true;
+            });
+        }
+
+        // --- CREA EL PERFIL LA PRIMERA VEZ QUE SE LOGUEA (con username único + referido si vino de un link) ---
+        async function createUserProfile(user) {
+            let baseUsername = slugify(user.displayName || user.email.split('@')[0]);
+            let finalUsername = baseUsername;
+            let attempts = 0;
+
+            // Si el username base ya existe, le agregamos números hasta encontrar uno libre
+            while (attempts < 8) {
+                try {
+                    await claimUsername(finalUsername, user.uid);
+                    break;
+                } catch (e) {
+                    attempts++;
+                    finalUsername = baseUsername + Math.floor(100 + Math.random() * 900);
+                }
+            }
+
+            // Resolvemos si vino con un código de referido válido (y que no sea a sí mismo)
+            let referidoPor = null;
+            const pendingRef = localStorage.getItem('pending_ref');
+            if (pendingRef && pendingRef !== finalUsername) {
+                const refSnap = await getDoc(doc(db, 'usernames', pendingRef));
+                if (refSnap.exists() && refSnap.data().uid !== user.uid) {
+                    referidoPor = refSnap.data().uid;
+                }
+            }
+            localStorage.removeItem('pending_ref');
+
+            await setDoc(doc(db, 'users', user.uid), {
+                username: finalUsername,
+                email: user.email,
+                puntos: 0,
+                referido_por: referidoPor,
+                fecha_creacion: serverTimestamp()
+            });
+
+            return finalUsername;
+        }
+
+        // --- PINTA LOS DATOS DEL PERFIL EN PANTALLA ---
+        async function renderProfile(user, data) {
+            const puntosFormatted = `${data.puntos || 0} Puntos`;
+            document.getElementById('profile-balance').innerText = puntosFormatted;
+            document.getElementById('header-balance').innerText = puntosFormatted;
+            document.getElementById('username-input').value = data.username;
+
+            const link = `${window.location.origin}${window.location.pathname.replace('index.html', '')}login.html?ref=${data.username}`;
+            document.getElementById('profile-ref-code').innerText = link;
+            document.getElementById('btn-copy-ref').dataset.link = link;
+            document.getElementById('btn-share-whatsapp').dataset.link = link;
+
+            // Cuenta real de referidos: usuarios cuyo campo referido_por sea mi uid
+            const refQuery = query(collection(db, 'users'), where('referido_por', '==', user.uid));
+            const refSnap = await getDocs(refQuery);
+            document.getElementById('profile-ref-count').innerText = refSnap.size;
+        }
 
         // Escuchador de estado
         onAuthStateChanged(auth, async (user) => {
@@ -241,25 +335,15 @@
 
                 try {
                     const userRef = doc(db, 'users', user.uid);
-                    const userSnap = await getDoc(userRef);
-                    
-                    if (userSnap.exists()) {
-                        const data = userSnap.data();
-                        const saldoFormatted = `USD ${parseFloat(data.saldo || 0).toFixed(2)}`;
-                        
-                        document.getElementById('profile-balance').innerText = saldoFormatted;
-                        document.getElementById('header-balance').innerText = saldoFormatted;
-                        document.getElementById('profile-ref-code').innerText = data.codigo_referido || 'Sin código';
-                        
-                        const refQuery = query(collection(db, 'referrals'), where('invitado_por', '==', user.uid));
-                        const refSnap = await getDocs(refQuery);
-                        document.getElementById('profile-ref-count').innerText = refSnap.size;
-                    } else {
-                        document.getElementById('profile-balance').innerText = 'USD 0.00';
-                        document.getElementById('header-balance').innerText = 'USD 0.00';
-                        document.getElementById('profile-ref-code').innerText = 'Pendiente...';
+                    let userSnap = await getDoc(userRef);
+
+                    if (!userSnap.exists()) {
+                        // Primera vez que vemos a este usuario: le creamos el perfil de verdad
+                        await createUserProfile(user);
+                        userSnap = await getDoc(userRef);
                     }
 
+                    await renderProfile(user, userSnap.data());
                     renderFirestoreOrders(user.uid);
 
                 } catch (error) {
@@ -276,9 +360,74 @@
                     historyGuest.style.display = 'block';
                     profileAuth.style.display = 'none';
                     historyAuth.style.display = 'none';
-                    document.getElementById('header-balance').innerText = 'USD 0.00';
+                    document.getElementById('header-balance').innerText = '0 Puntos';
                 }
             }
+        });
+
+        // --- GUARDAR NUEVO USERNAME (editable, sin repetidos) ---
+        document.getElementById('btn-save-username').addEventListener('click', async () => {
+            const user = auth.currentUser;
+            if (!user) return;
+            const statusEl = document.getElementById('username-status');
+            const newUsername = slugify(document.getElementById('username-input').value);
+
+            if (newUsername.length < 3) {
+                statusEl.style.color = '#ff4444';
+                statusEl.innerText = 'Mínimo 3 caracteres.';
+                return;
+            }
+
+            const userSnap = await getDoc(doc(db, 'users', user.uid));
+            const oldUsername = userSnap.data().username;
+
+            if (newUsername === oldUsername) {
+                statusEl.style.color = '#888';
+                statusEl.innerText = 'Ese ya es tu username actual.';
+                return;
+            }
+
+            statusEl.style.color = '#888';
+            statusEl.innerText = 'Verificando disponibilidad...';
+
+            try {
+                await claimUsername(newUsername, user.uid);
+                // Liberamos el username viejo y actualizamos el perfil
+                await deleteDoc(doc(db, 'usernames', oldUsername));
+                await setDoc(doc(db, 'users', user.uid), { username: newUsername }, { merge: true });
+
+                statusEl.style.color = 'var(--accent)';
+                statusEl.innerText = '¡Username actualizado!';
+
+                const freshSnap = await getDoc(doc(db, 'users', user.uid));
+                await renderProfile(user, freshSnap.data());
+            } catch (e) {
+                statusEl.style.color = '#ff4444';
+                statusEl.innerText = 'Ese nombre ya está en uso, probá otro.';
+            }
+        });
+
+        // --- COPIAR LINK DE INVITACIÓN ---
+        document.getElementById('btn-copy-ref').addEventListener('click', function () {
+            const link = this.dataset.link;
+            if (!link) return;
+            navigator.clipboard.writeText(link).then(() => {
+                const statusIcon = this.querySelector('i');
+                statusIcon.className = 'fas fa-check';
+                statusIcon.style.color = 'var(--accent)';
+                setTimeout(() => {
+                    statusIcon.className = 'fas fa-copy';
+                    statusIcon.style.color = '#444';
+                }, 1500);
+            });
+        });
+
+        // --- COMPARTIR LINK DE INVITACIÓN POR WHATSAPP ---
+        document.getElementById('btn-share-whatsapp').addEventListener('click', function () {
+            const link = this.dataset.link;
+            if (!link) return;
+            const mensaje = `¡Sumate a Nexus y cargá tus juegos al toque! Usá mi link para registrarte: ${link}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
         });
 
         async function renderFirestoreOrders(uid) {
