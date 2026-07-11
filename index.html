@@ -179,24 +179,19 @@
                     <p style="color: #888; font-size: 0.75rem; text-transform: uppercase; font-weight: 700;">Puntos Acumulados</p>
                     <h2 id="profile-balance" style="font-size: 2.2rem; font-weight: 900; margin-bottom: 20px; color: var(--accent);">0 Puntos</h2>
 
-                    <div id="redeem-code-box" style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; text-align: left; display:none;">
-                        <p style="color: #777; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">¿Tenés un código de invitación?</p>
+                    <div style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; text-align: left;">
+                        <p style="color: #777; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">Tu Nombre de Usuario</p>
                         <div style="display: flex; gap: 8px;">
-                            <input id="redeem-code-input" type="text" maxlength="6" placeholder="Ej: 8HGT2K" style="flex: 1; min-width: 0; background: #111; border: 1px solid #333; color: white; padding: 10px 8px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; outline: none; text-transform: uppercase;">
-                            <button id="btn-redeem-code" style="flex-shrink: 0; background: var(--accent); color: #000; border: none; padding: 0 14px; border-radius: 10px; font-weight: 900; font-size: 0.7rem; cursor: pointer; white-space: nowrap;">CANJEAR</button>
+                            <input id="username-input" type="text" maxlength="15" style="flex: 1; min-width: 0; background: #111; border: 1px solid #333; color: white; padding: 10px 8px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; outline: none;">
+                            <button id="btn-save-username" style="flex-shrink: 0; background: var(--accent); color: #000; border: none; padding: 0 14px; border-radius: 10px; font-weight: 900; font-size: 0.7rem; cursor: pointer; white-space: nowrap;">GUARDAR</button>
                         </div>
-                        <p id="redeem-status" style="font-size: 0.75rem; margin-top: 6px; min-height: 16px;"></p>
-                    </div>
-
-                    <div id="redeemed-info" style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; text-align: left; display:none;">
-                        <p style="color: #777; font-size: 0.75rem; font-weight: 600;">Invitado por</p>
-                        <p id="redeemed-by" style="font-size: 0.9rem; font-weight: 900; color: var(--accent);">---</p>
+                        <p id="username-status" style="font-size: 0.75rem; margin-top: 6px; min-height: 16px;"></p>
                     </div>
 
                     <div style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; text-align: left; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" id="btn-copy-ref">
                         <div>
-                            <p style="color: #777; font-size: 0.75rem; font-weight: 600; margin-bottom: 2px;">Tu Código de Invitación</p>
-                            <p id="profile-ref-code" style="font-size: 1.3rem; font-weight: 900; letter-spacing: 2px;">---</p>
+                            <p style="color: #777; font-size: 0.75rem; font-weight: 600; margin-bottom: 2px;">Tu Link de Invitación</p>
+                            <p id="profile-ref-code" style="font-size: 0.9rem; font-weight: 900; word-break: break-all;">---</p>
                         </div>
                         <i class="fas fa-copy" style="color: #444; font-size: 1.2rem; flex-shrink: 0; margin-left: 10px;"></i>
                     </div>
@@ -270,28 +265,6 @@
             });
         }
 
-        // --- GENERA UN CÓDIGO DE INVITACIÓN ALEATORIO (6 caracteres, sin letras/números confusos) ---
-        function randomReferralCode() {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin 0/O/1/I
-            let code = '';
-            for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-            return code;
-        }
-
-        // --- RESERVA UN CÓDIGO DE INVITACIÓN DE FORMA ATÓMICA (fijo, no cambia aunque cambies el username) ---
-        // Usa la colección "referral_codes" como índice propio, separado de "usernames".
-        async function claimReferralCode(code, uid) {
-            const refDoc = doc(db, 'referral_codes', code);
-            return await runTransaction(db, async (transaction) => {
-                const snap = await transaction.get(refDoc);
-                if (snap.exists()) {
-                    throw new Error('TAKEN');
-                }
-                transaction.set(refDoc, { uid: uid });
-                return true;
-            });
-        }
-
         // --- CREA EL PERFIL LA PRIMERA VEZ QUE SE LOGUEA (con username único + referido si vino de un link) ---
         async function createUserProfile(user) {
             let baseUsername = slugify(user.displayName || user.email.split('@')[0]);
@@ -309,85 +282,48 @@
                 }
             }
 
-            // Cada cuenta nueva recibe automáticamente un código de invitación propio y fijo
-            // (no cambia aunque después edites tu username)
-            let referralCode = randomReferralCode();
-            let rAttempts = 0;
-            while (rAttempts < 8) {
-                try {
-                    await claimReferralCode(referralCode, user.uid);
-                    break;
-                } catch (e) {
-                    rAttempts++;
-                    referralCode = randomReferralCode();
+            // Resolvemos si vino con un código de referido válido (y que no sea a sí mismo)
+            let referidoPor = null;
+            const pendingRef = localStorage.getItem('pending_ref');
+            if (pendingRef && pendingRef !== finalUsername) {
+                const refSnap = await getDoc(doc(db, 'usernames', pendingRef));
+                if (refSnap.exists() && refSnap.data().uid !== user.uid) {
+                    referidoPor = refSnap.data().uid;
                 }
             }
+            localStorage.removeItem('pending_ref');
 
-            // Toda cuenta nueva arranca en 0 puntos, sin referido.
-            // El referido ahora se canjea a mano desde el perfil (ver redeemReferralCode).
             const newUserRef = doc(db, 'users', user.uid);
-            await setDoc(newUserRef, {
-                username: finalUsername,
-                email: user.email,
-                puntos: 0,
-                codigo_referido: referralCode,
-                referido_por: null,
-                referido_por_nombre: null,
-                referidos_count: 0,
-                fecha_creacion: serverTimestamp()
-            });
+
+            if (referidoPor) {
+                // TRANSACCIÓN ATÓMICA: se crea tu perfil con 3 puntos de bienvenida
+                // Y se le suman 5 puntos a quien te invitó, todo junto o nada (nunca queda a medias).
+                const referrerRef = doc(db, 'users', referidoPor);
+                await runTransaction(db, async (transaction) => {
+                    const referrerSnap = await transaction.get(referrerRef);
+                    const puntosActualesReferidor = referrerSnap.exists() ? (referrerSnap.data().puntos || 0) : 0;
+
+                    transaction.set(newUserRef, {
+                        username: finalUsername,
+                        email: user.email,
+                        puntos: 3,
+                        referido_por: referidoPor,
+                        fecha_creacion: serverTimestamp()
+                    });
+
+                    transaction.update(referrerRef, { puntos: puntosActualesReferidor + 5 });
+                });
+            } else {
+                await setDoc(newUserRef, {
+                    username: finalUsername,
+                    email: user.email,
+                    puntos: 0,
+                    referido_por: null,
+                    fecha_creacion: serverTimestamp()
+                });
+            }
 
             return finalUsername;
-        }
-
-        // --- CANJEA UN CÓDIGO DE INVITACIÓN (código propio de otra cuenta) ---
-        // Se puede usar una sola vez por cuenta. Transacción atómica:
-        // vos sumás 3 puntos, quien te invitó suma 5, todo junto o nada.
-        async function redeemReferralCode(rawCode) {
-            const user = auth.currentUser;
-            if (!user) throw new Error('NO_AUTH');
-
-            const code = (rawCode || '').toUpperCase().trim();
-            if (!code) throw new Error('INVALID');
-
-            const myRef = doc(db, 'users', user.uid);
-            const myFreshSnap = await getDoc(myRef);
-            const myData = myFreshSnap.data();
-
-            if (myData.referido_por) throw new Error('ALREADY_REDEEMED');
-            if (code === myData.codigo_referido) throw new Error('SELF');
-
-            const codeSnap = await getDoc(doc(db, 'referral_codes', code));
-            if (!codeSnap.exists()) throw new Error('NOT_FOUND');
-
-            const referrerUid = codeSnap.data().uid;
-            if (referrerUid === user.uid) throw new Error('SELF');
-
-            const referrerRef = doc(db, 'users', referrerUid);
-
-            await runTransaction(db, async (transaction) => {
-                const freshMe = await transaction.get(myRef);
-                const freshReferrer = await transaction.get(referrerRef);
-
-                if (freshMe.data().referido_por) throw new Error('ALREADY_REDEEMED');
-                if (!freshReferrer.exists()) throw new Error('NOT_FOUND');
-
-                const misPuntos = freshMe.data().puntos || 0;
-                const puntosReferidor = freshReferrer.data().puntos || 0;
-                const countReferidor = freshReferrer.data().referidos_count || 0;
-
-                transaction.update(myRef, {
-                    referido_por: referrerUid,
-                    referido_por_nombre: code,
-                    puntos: misPuntos + 3
-                });
-                transaction.update(referrerRef, {
-                    puntos: puntosReferidor + 5,
-                    referidos_count: countReferidor + 1
-                });
-            });
-
-            return code;
         }
 
         // --- PINTA LOS DATOS DEL PERFIL EN PANTALLA ---
@@ -395,27 +331,17 @@
             const puntosFormatted = `${data.puntos || 0} Puntos`;
             document.getElementById('profile-balance').innerText = puntosFormatted;
             document.getElementById('header-balance').innerText = puntosFormatted;
+            document.getElementById('username-input').value = data.username;
 
-            const code = data.codigo_referido || '---';
-            document.getElementById('profile-ref-code').innerText = code;
-            document.getElementById('btn-copy-ref').dataset.link = code;
-            document.getElementById('btn-share-whatsapp').dataset.link = code;
+            const link = `${window.location.origin}${window.location.pathname.replace('index.html', '')}login.html?ref=${data.username}`;
+            document.getElementById('profile-ref-code').innerText = link;
+            document.getElementById('btn-copy-ref').dataset.link = link;
+            document.getElementById('btn-share-whatsapp').dataset.link = link;
 
-            // Total de referidos: ahora es un contador directo en tu propio doc
-            // (evita tener que leer documentos de otros usuarios, que las reglas no permiten)
-            document.getElementById('profile-ref-count').innerText = data.referidos_count || 0;
-
-            // --- Mostrar canje de código o info de quién te invitó ---
-            const redeemBox = document.getElementById('redeem-code-box');
-            const redeemedInfo = document.getElementById('redeemed-info');
-            if (data.referido_por) {
-                redeemBox.style.display = 'none';
-                redeemedInfo.style.display = 'block';
-                document.getElementById('redeemed-by').innerText = data.referido_por_nombre || '---';
-            } else {
-                redeemedInfo.style.display = 'none';
-                redeemBox.style.display = 'block';
-            }
+            // Cuenta real de referidos: usuarios cuyo campo referido_por sea mi uid
+            const refQuery = query(collection(db, 'users'), where('referido_por', '==', user.uid));
+            const refSnap = await getDocs(refQuery);
+            document.getElementById('profile-ref-count').innerText = refSnap.size;
         }
 
         // Escuchador de estado
@@ -461,37 +387,45 @@
             }
         });
 
-        // --- CANJEAR CÓDIGO DE INVITACIÓN ---
-        document.getElementById('btn-redeem-code').addEventListener('click', async () => {
-            const statusEl = document.getElementById('redeem-status');
-            const input = document.getElementById('redeem-code-input');
-            const code = input.value.trim();
+        // --- GUARDAR NUEVO USERNAME (editable, sin repetidos) ---
+        document.getElementById('btn-save-username').addEventListener('click', async () => {
+            const user = auth.currentUser;
+            if (!user) return;
+            const statusEl = document.getElementById('username-status');
+            const newUsername = slugify(document.getElementById('username-input').value);
 
-            if (!code) {
+            if (newUsername.length < 3) {
                 statusEl.style.color = '#ff4444';
-                statusEl.innerText = 'Ingresá un código.';
+                statusEl.innerText = 'Mínimo 3 caracteres.';
+                return;
+            }
+
+            const userSnap = await getDoc(doc(db, 'users', user.uid));
+            const oldUsername = userSnap.data().username;
+
+            if (newUsername === oldUsername) {
+                statusEl.style.color = '#888';
+                statusEl.innerText = 'Ese ya es tu username actual.';
                 return;
             }
 
             statusEl.style.color = '#888';
-            statusEl.innerText = 'Verificando...';
+            statusEl.innerText = 'Verificando disponibilidad...';
 
             try {
-                await redeemReferralCode(code);
-                statusEl.style.color = 'var(--accent)';
-                statusEl.innerText = '¡Código canjeado! +3 puntos';
+                await claimUsername(newUsername, user.uid);
+                // Liberamos el username viejo y actualizamos el perfil
+                await deleteDoc(doc(db, 'usernames', oldUsername));
+                await setDoc(doc(db, 'users', user.uid), { username: newUsername }, { merge: true });
 
-                const user = auth.currentUser;
+                statusEl.style.color = 'var(--accent)';
+                statusEl.innerText = '¡Username actualizado!';
+
                 const freshSnap = await getDoc(doc(db, 'users', user.uid));
                 await renderProfile(user, freshSnap.data());
             } catch (e) {
                 statusEl.style.color = '#ff4444';
-                if (e.message === 'ALREADY_REDEEMED') statusEl.innerText = 'Ya usaste un código antes.';
-                else if (e.message === 'NOT_FOUND') statusEl.innerText = 'Ese código no existe.';
-                else if (e.message === 'SELF') statusEl.innerText = 'No podés usar tu propio código.';
-                else if (e.message === 'INVALID') statusEl.innerText = 'Código inválido.';
-                else statusEl.innerText = 'Error: ' + (e.code || '') + ' - ' + e.message;
-                console.error('Error real al canjear:', e);
+                statusEl.innerText = 'Ese nombre ya está en uso, probá otro.';
             }
         });
 
@@ -510,11 +444,11 @@
             });
         });
 
-        // --- COMPARTIR CÓDIGO DE INVITACIÓN POR WHATSAPP ---
+        // --- COMPARTIR LINK DE INVITACIÓN POR WHATSAPP ---
         document.getElementById('btn-share-whatsapp').addEventListener('click', function () {
-            const code = this.dataset.link;
-            if (!code) return;
-            const mensaje = `¡Sumate a Nexus y cargá tus juegos al toque! Registrate y usá mi código de invitación en tu perfil: ${code}`;
+            const link = this.dataset.link;
+            if (!link) return;
+            const mensaje = `¡Sumate a Nexus y cargá tus juegos al toque! Usá mi link para registrarte: ${link}`;
             window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
         });
 
