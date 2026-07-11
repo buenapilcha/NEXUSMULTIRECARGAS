@@ -181,33 +181,35 @@
         </div>
     </div>
 
-        <script type="module">
-        // Importamos todo desde nuestro nuevo archivo de configuración
-        import { auth, provider, signInWithPopup, onAuthStateChanged } from './firebase-config.js';
+            <script type="module">
+        // Importamos las funciones de Auth directamente desde el CDN de Firebase
+        import { signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        // Importamos tu auth y provider desde tu archivo de configuración
+        import { auth, provider } from './firebase-config.js';[span_0](start_span)[span_0](end_span)[span_1](start_span)[span_1](end_span)
 
         // Observador del estado de autenticación
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
+        onAuthStateChanged(auth, (user) => {[span_2](start_span)[span_2](end_span)
+            if (user) {[span_3](start_span)[span_3](end_span)
                 // Si hay usuario, borramos rastro de invitado y vamos al index
-                localStorage.removeItem('modo_invitado');
-                window.location.href = "index.html";
+                localStorage.removeItem('modo_invitado');[span_4](start_span)[span_4](end_span)
+                window.location.href = "index.html";[span_5](start_span)[span_5](end_span)
             }
-        });
+        });[span_6](start_span)[span_6](end_span)
 
         // Evento para el botón de Google
-        document.getElementById('btn-login').onclick = async () => {
-            try {
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                console.error("Error de Autenticación:", error);
+        document.getElementById('btn-login').onclick = async () => {[span_7](start_span)[span_7](end_span)
+            try {[span_8](start_span)[span_8](end_span)
+                await signInWithPopup(auth, provider);[span_9](start_span)[span_9](end_span)
+            } catch (error) {[span_10](start_span)[span_10](end_span)
+                console.error("Error de Autenticación:", error);[span_11](start_span)[span_11](end_span)
             }
-        };
+        };[span_12](start_span)[span_12](end_span)
 
         // Evento para el botón de Invitado
-        document.getElementById('btn-guest').onclick = () => {
-            localStorage.setItem('modo_invitado', 'true');
-            window.location.href = "index.html";
-        };
+        document.getElementById('btn-guest').onclick = () => {[span_13](start_span)[span_13](end_span)
+            localStorage.setItem('modo_invitado', 'true');[span_14](start_span)[span_14](end_span)
+            window.location.href = "index.html";[span_15](start_span)[span_15](end_span)
+        };[span_16](start_span)[span_16](end_span)
     </script>
 </body>
 </html>
