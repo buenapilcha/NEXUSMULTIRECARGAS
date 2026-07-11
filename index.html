@@ -182,8 +182,8 @@
                     <div style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; text-align: left;">
                         <p style="color: #777; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">Tu Nombre de Usuario</p>
                         <div style="display: flex; gap: 8px;">
-                            <input id="username-input" type="text" maxlength="15" style="flex: 1; background: #111; border: 1px solid #333; color: white; padding: 10px 12px; border-radius: 10px; font-size: 0.95rem; font-weight: 700; outline: none;">
-                            <button id="btn-save-username" style="background: var(--accent); color: #000; border: none; padding: 0 16px; border-radius: 10px; font-weight: 900; font-size: 0.75rem; cursor: pointer;">GUARDAR</button>
+                            <input id="username-input" type="text" maxlength="15" style="flex: 1; min-width: 0; background: #111; border: 1px solid #333; color: white; padding: 10px 8px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; outline: none;">
+                            <button id="btn-save-username" style="flex-shrink: 0; background: var(--accent); color: #000; border: none; padding: 0 14px; border-radius: 10px; font-weight: 900; font-size: 0.7rem; cursor: pointer; white-space: nowrap;">GUARDAR</button>
                         </div>
                         <p id="username-status" style="font-size: 0.75rem; margin-top: 6px; min-height: 16px;"></p>
                     </div>
@@ -293,13 +293,35 @@
             }
             localStorage.removeItem('pending_ref');
 
-            await setDoc(doc(db, 'users', user.uid), {
-                username: finalUsername,
-                email: user.email,
-                puntos: 0,
-                referido_por: referidoPor,
-                fecha_creacion: serverTimestamp()
-            });
+            const newUserRef = doc(db, 'users', user.uid);
+
+            if (referidoPor) {
+                // TRANSACCIÓN ATÓMICA: se crea tu perfil con 3 puntos de bienvenida
+                // Y se le suman 5 puntos a quien te invitó, todo junto o nada (nunca queda a medias).
+                const referrerRef = doc(db, 'users', referidoPor);
+                await runTransaction(db, async (transaction) => {
+                    const referrerSnap = await transaction.get(referrerRef);
+                    const puntosActualesReferidor = referrerSnap.exists() ? (referrerSnap.data().puntos || 0) : 0;
+
+                    transaction.set(newUserRef, {
+                        username: finalUsername,
+                        email: user.email,
+                        puntos: 3,
+                        referido_por: referidoPor,
+                        fecha_creacion: serverTimestamp()
+                    });
+
+                    transaction.update(referrerRef, { puntos: puntosActualesReferidor + 5 });
+                });
+            } else {
+                await setDoc(newUserRef, {
+                    username: finalUsername,
+                    email: user.email,
+                    puntos: 0,
+                    referido_por: null,
+                    fecha_creacion: serverTimestamp()
+                });
+            }
 
             return finalUsername;
         }
