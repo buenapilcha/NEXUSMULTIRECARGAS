@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pago Transferencia | NEXUS SYSTEM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #060606;
+            --card: #121214;
+            --accent: #00ff88; /* Verde Premium unificado */
+            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-dim: #a0a0a0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text-main); font-family: 'Outfit', sans-serif; overflow-x: hidden; }
+
+        header { 
+            padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; 
+            background: rgba(6, 6, 6, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            z-index: 1000; border-bottom: 1px solid var(--border); position: sticky; top: 0;
+        }
+        .back-btn { 
+            width: 42px; height: 42px; background: var(--card); border: 1px solid var(--border); 
+            border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+
+        .container { padding: 20px; padding-bottom: 140px; }
+
+        /* Hero */
+        .bank-hero { text-align: center; padding: 10px 0; }
+        .bank-logo-box { 
+            width: 60px; height: 60px; background: white; border-radius: 18px; 
+            margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;
+            padding: 10px; filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.2));
+        }
+        .bank-logo-box img { width: 100%; object-fit: contain; }
+        
+        .amount-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 24px;
+            padding: 20px; text-align: center; margin-bottom: 25px;
+            background: linear-gradient(145deg, #121214 0%, #0a0a0b 100%);
+        }
+        .amount-card span { color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
+        .amount-card h2 { font-size: 2.2rem; font-weight: 900; color: var(--accent); margin-top: 5px; }
+
+        .section-label { font-size: 0.7rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+        
+        /* Cajas de Copiado Estilo Cripto */
+        .copy-box {
+            background: #1a1a1c; border: 1px solid var(--border); border-radius: 18px;
+            padding: 15px; margin-bottom: 15px;
+        }
+        .copy-box p { font-size: 0.65rem; color: var(--text-dim); margin-bottom: 6px; text-transform: uppercase; }
+        .copy-inner { display: flex; align-items: center; gap: 10px; }
+        .copy-inner code { flex: 1; font-family: monospace; font-size: 0.9rem; color: white; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+        .copy-btn { 
+            background: var(--accent); color: black; border: none; padding: 8px 14px; 
+            border-radius: 10px; font-weight: 800; font-size: 0.7rem; cursor: pointer;
+        }
+
+        /* Instrucciones */
+        .instruction-item {
+            display: flex; gap: 12px; margin-bottom: 12px; background: rgba(255,255,255,0.03);
+            padding: 15px; border-radius: 18px; border: 1px solid var(--border);
+        }
+        .instruction-item i { color: var(--accent); font-size: 1rem; margin-top: 2px; }
+        .instruction-item p { font-size: 0.8rem; color: var(--text-dim); line-height: 1.4; }
+
+        /* Footer */
+        .footer-action {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            padding: 20px 24px calc(20px + env(safe-area-inset-bottom));
+            background: linear-gradient(to top, var(--bg) 80%, transparent);
+            z-index: 1001;
+        }
+        .btn-confirm {
+            width: 100%; background: var(--accent); color: black;
+            padding: 18px; border-radius: 20px; border: none;
+            font-size: 1rem; font-weight: 900; text-transform: uppercase;
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            cursor: pointer;
+        }
+
+        #toast {
+            position: fixed; top: 100px; left: 50%; transform: translateX(-50%);
+            background: var(--accent); color: black; padding: 10px 25px;
+            border-radius: 50px; font-weight: 800; font-size: 0.8rem;
+            display: none; z-index: 2000;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="back-btn" onclick="window.location.href='pago.html'"><i class="fas fa-chevron-left"></i></div>
+        <div style="font-weight: 900;">CHECKOUT TRANSFERENCIA</div>
+        <div style="width: 42px;"></div>
+    </header>
+
+    <div id="toast">Copiado al portapapeles</div>
+
+    <div class="container">
+        <div class="bank-hero">
+            <div class="bank-logo-box">
+                <img src="https://landing.claro.com.ar/p/claropay/images/rich-preview.png" alt="Claro Pay">
+            </div>
+            <h1 style="font-weight: 900;">Claro Pay</h1>
+        </div>
+
+        <div class="amount-card">
+            <span>Monto Total a Enviar</span>
+            <h2 id="display-total">$0.00</h2>
+        </div>
+
+        <div class="section-label">Información de la Cuenta</div>
+        
+        <div class="copy-box">
+            <p>Titular de la cuenta</p>
+            <div class="copy-inner">
+                <code style="font-family: 'Outfit', sans-serif;">Miguel Federico Fitio Diederich</code>
+            </div>
+        </div>
+
+        <div class="copy-box">
+            <p>Alias de cuenta</p>
+            <div class="copy-inner">
+                <code id="val-alias">20398675038.claropay</code>
+                <button class="copy-btn" onclick="copyText('val-alias')">COPIAR</button>
+            </div>
+        </div>
+
+        <div class="copy-box">
+            <p>Número de CBU / CVU</p>
+            <div class="copy-inner">
+                <code id="val-cbu">0000085700203986750381</code>
+                <button class="copy-btn" onclick="copyText('val-cbu')">COPIAR</button>
+            </div>
+        </div>
+
+        <div class="section-label">Instrucciones de activación</div>
+        <div class="instruction-item">
+            <i class="fas fa-check-circle"></i>
+            <p>Realiza la transferencia desde tu Homebanking o billetera virtual.</p>
+        </div>
+        <div class="instruction-item">
+            <i class="fas fa-camera"></i>
+            <p>Toma una <b>captura de pantalla</b> clara del recibo de pago.</p>
+        </div>
+        <div class="instruction-item">
+            <i class="fas fa-comment-dots"></i>
+            <p>Envía la captura por el botón inferior para recibir tus diamantes.</p>
+        </div>
+    </div>
+
+    <div class="footer-action">
+        <button class="btn-confirm" onclick="confirmPayment()">
+            <i class="fab fa-whatsapp"></i> ENVIAR COMPROBANTE
+        </button>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const rawData = localStorage.getItem('current_checkout');
+            if(rawData) {
+                const data = JSON.parse(rawData);
+                document.getElementById('display-total').innerText = data.price;
+            }
+        }
+
+        function copyText(id) {
+            const text = document.getElementById(id).innerText;
+            navigator.clipboard.writeText(text);
+            const toast = document.getElementById('toast');
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2000);
+        }
+
+        function confirmPayment() {
+            const rawData = localStorage.getItem('current_checkout');
+            if(!rawData) return;
+            
+            const data = JSON.parse(rawData);
+            const mensaje = `¡Hola Nexus System! Acabo de realizar una transferencia.%0A%0A*Detalles de mi pedido:*%0A- *Monto:* ${data.price}%0A- *ID/Email:* ${data.id}%0A- *Producto:* ${data.pack}%0A- *Orden:* ${data.orderId}%0A%0AAdjunto el comprobante de pago:`;
+            
+            // Reemplaza con tu número real de WhatsApp aquí
+            window.location.href = `https://wa.me/5491122334455?text=${mensaje}`;
+        }
+    </script>
+</body>
+</html>

