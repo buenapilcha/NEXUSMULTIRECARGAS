@@ -184,15 +184,6 @@
         import { signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { auth, provider } from './firebase-config.js';
 
-        // --- CAPTURA DEL CÓDIGO DE REFERIDO (si vino de un link compartido) ---
-        // Si alguien entra con login.html?ref=nombredeusuario, guardamos ese
-        // username temporalmente para usarlo cuando se cree su perfil recién nacido.
-        const params = new URLSearchParams(window.location.search);
-        const refParam = params.get('ref');
-        if (refParam) {
-            localStorage.setItem('pending_ref', refParam.toLowerCase().trim());
-        }
-
         // Observador del estado de autenticación
         onAuthStateChanged(auth, (user) => {
             if (user) {
