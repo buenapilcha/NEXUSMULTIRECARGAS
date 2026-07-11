@@ -188,6 +188,20 @@
                         <p id="username-status" style="font-size: 0.75rem; margin-top: 6px; min-height: 16px;"></p>
                     </div>
 
+                    <div id="redeem-code-box" style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; text-align: left; display:none;">
+                        <p style="color: #777; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">¿Tenés un código de invitación?</p>
+                        <div style="display: flex; gap: 8px;">
+                            <input id="redeem-code-input" type="text" maxlength="15" placeholder="Código de invitación" style="flex: 1; min-width: 0; background: #111; border: 1px solid #333; color: white; padding: 10px 8px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; outline: none;">
+                            <button id="btn-redeem-code" style="flex-shrink: 0; background: var(--accent); color: #000; border: none; padding: 0 14px; border-radius: 10px; font-weight: 900; font-size: 0.7rem; cursor: pointer; white-space: nowrap;">CANJEAR</button>
+                        </div>
+                        <p id="redeem-status" style="font-size: 0.75rem; margin-top: 6px; min-height: 16px;"></p>
+                    </div>
+
+                    <div id="redeemed-info" style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; text-align: left; display:none;">
+                        <p style="color: #777; font-size: 0.75rem; font-weight: 600;">Invitado por</p>
+                        <p id="redeemed-by" style="font-size: 0.9rem; font-weight: 900; color: var(--accent);">---</p>
+                    </div>
+
                     <div style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; text-align: left; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" id="btn-copy-ref">
                         <div>
                             <p style="color: #777; font-size: 0.75rem; font-weight: 600; margin-bottom: 2px;">Tu Link de Invitación</p>
@@ -282,48 +296,65 @@
                 }
             }
 
-            // Resolvemos si vino con un código de referido válido (y que no sea a sí mismo)
-            let referidoPor = null;
-            const pendingRef = localStorage.getItem('pending_ref');
-            if (pendingRef && pendingRef !== finalUsername) {
-                const refSnap = await getDoc(doc(db, 'usernames', pendingRef));
-                if (refSnap.exists() && refSnap.data().uid !== user.uid) {
-                    referidoPor = refSnap.data().uid;
-                }
-            }
-            localStorage.removeItem('pending_ref');
-
+            // Toda cuenta nueva arranca en 0 puntos, sin referido.
+            // El referido ahora se canjea a mano desde el perfil (ver redeemReferralCode).
             const newUserRef = doc(db, 'users', user.uid);
-
-            if (referidoPor) {
-                // TRANSACCIÓN ATÓMICA: se crea tu perfil con 3 puntos de bienvenida
-                // Y se le suman 5 puntos a quien te invitó, todo junto o nada (nunca queda a medias).
-                const referrerRef = doc(db, 'users', referidoPor);
-                await runTransaction(db, async (transaction) => {
-                    const referrerSnap = await transaction.get(referrerRef);
-                    const puntosActualesReferidor = referrerSnap.exists() ? (referrerSnap.data().puntos || 0) : 0;
-
-                    transaction.set(newUserRef, {
-                        username: finalUsername,
-                        email: user.email,
-                        puntos: 3,
-                        referido_por: referidoPor,
-                        fecha_creacion: serverTimestamp()
-                    });
-
-                    transaction.update(referrerRef, { puntos: puntosActualesReferidor + 5 });
-                });
-            } else {
-                await setDoc(newUserRef, {
-                    username: finalUsername,
-                    email: user.email,
-                    puntos: 0,
-                    referido_por: null,
-                    fecha_creacion: serverTimestamp()
-                });
-            }
+            await setDoc(newUserRef, {
+                username: finalUsername,
+                email: user.email,
+                puntos: 0,
+                referido_por: null,
+                referido_por_nombre: null,
+                fecha_creacion: serverTimestamp()
+            });
 
             return finalUsername;
+        }
+
+        // --- CANJEA UN CÓDIGO DE INVITACIÓN (username de otro usuario) ---
+        // Se puede usar una sola vez por cuenta. Transacción atómica:
+        // vos sumás 3 puntos, quien te invitó suma 5, todo junto o nada.
+        async function redeemReferralCode(rawCode) {
+            const user = auth.currentUser;
+            if (!user) throw new Error('NO_AUTH');
+
+            const code = slugify(rawCode);
+            if (!code) throw new Error('INVALID');
+
+            const myRef = doc(db, 'users', user.uid);
+            const myFreshSnap = await getDoc(myRef);
+            const myData = myFreshSnap.data();
+
+            if (myData.referido_por) throw new Error('ALREADY_REDEEMED');
+            if (code === myData.username) throw new Error('SELF');
+
+            const codeSnap = await getDoc(doc(db, 'usernames', code));
+            if (!codeSnap.exists()) throw new Error('NOT_FOUND');
+
+            const referrerUid = codeSnap.data().uid;
+            if (referrerUid === user.uid) throw new Error('SELF');
+
+            const referrerRef = doc(db, 'users', referrerUid);
+
+            await runTransaction(db, async (transaction) => {
+                const freshMe = await transaction.get(myRef);
+                const freshReferrer = await transaction.get(referrerRef);
+
+                if (freshMe.data().referido_por) throw new Error('ALREADY_REDEEMED');
+                if (!freshReferrer.exists()) throw new Error('NOT_FOUND');
+
+                const misPuntos = freshMe.data().puntos || 0;
+                const puntosReferidor = freshReferrer.data().puntos || 0;
+
+                transaction.update(myRef, {
+                    referido_por: referrerUid,
+                    referido_por_nombre: code,
+                    puntos: misPuntos + 3
+                });
+                transaction.update(referrerRef, { puntos: puntosReferidor + 5 });
+            });
+
+            return code;
         }
 
         // --- PINTA LOS DATOS DEL PERFIL EN PANTALLA ---
@@ -342,6 +373,24 @@
             const refQuery = query(collection(db, 'users'), where('referido_por', '==', user.uid));
             const refSnap = await getDocs(refQuery);
             document.getElementById('profile-ref-count').innerText = refSnap.size;
+
+            // --- Mostrar canje de código o info de quién te invitó ---
+            const redeemBox = document.getElementById('redeem-code-box');
+            const redeemedInfo = document.getElementById('redeemed-info');
+            if (data.referido_por) {
+                redeemBox.style.display = 'none';
+                redeemedInfo.style.display = 'block';
+                document.getElementById('redeemed-by').innerText = data.referido_por_nombre || '---';
+            } else {
+                redeemedInfo.style.display = 'none';
+                redeemBox.style.display = 'block';
+                // Si llegaste con un link ?ref=codigo, lo precargamos (no se canjea solo)
+                const pendingRef = localStorage.getItem('pending_ref');
+                if (pendingRef) {
+                    document.getElementById('redeem-code-input').value = pendingRef;
+                    localStorage.removeItem('pending_ref');
+                }
+            }
         }
 
         // Escuchador de estado
@@ -361,7 +410,6 @@
 
                     if (!userSnap.exists()) {
                         // Primera vez que vemos a este usuario: le creamos el perfil de verdad
-                        alert('DEBUG: pending_ref guardado = "' + localStorage.getItem('pending_ref') + '"');
                         await createUserProfile(user);
                         userSnap = await getDoc(userRef);
                     }
@@ -371,7 +419,6 @@
 
                 } catch (error) {
                     console.error("Error al obtener datos de Firestore:", error);
-                    alert('DEBUG ERROR: ' + error.message);
                 }
                 
             } else {
@@ -428,6 +475,39 @@
             } catch (e) {
                 statusEl.style.color = '#ff4444';
                 statusEl.innerText = 'Ese nombre ya está en uso, probá otro.';
+            }
+        });
+
+        // --- CANJEAR CÓDIGO DE INVITACIÓN ---
+        document.getElementById('btn-redeem-code').addEventListener('click', async () => {
+            const statusEl = document.getElementById('redeem-status');
+            const input = document.getElementById('redeem-code-input');
+            const code = input.value.trim();
+
+            if (!code) {
+                statusEl.style.color = '#ff4444';
+                statusEl.innerText = 'Ingresá un código.';
+                return;
+            }
+
+            statusEl.style.color = '#888';
+            statusEl.innerText = 'Verificando...';
+
+            try {
+                await redeemReferralCode(code);
+                statusEl.style.color = 'var(--accent)';
+                statusEl.innerText = '¡Código canjeado! +3 puntos';
+
+                const user = auth.currentUser;
+                const freshSnap = await getDoc(doc(db, 'users', user.uid));
+                await renderProfile(user, freshSnap.data());
+            } catch (e) {
+                statusEl.style.color = '#ff4444';
+                if (e.message === 'ALREADY_REDEEMED') statusEl.innerText = 'Ya usaste un código antes.';
+                else if (e.message === 'NOT_FOUND') statusEl.innerText = 'Ese código no existe.';
+                else if (e.message === 'SELF') statusEl.innerText = 'No podés usar tu propio código.';
+                else if (e.message === 'INVALID') statusEl.innerText = 'Código inválido.';
+                else statusEl.innerText = 'Error de permisos, avisá al soporte.';
             }
         });
 
