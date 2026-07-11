@@ -179,15 +179,6 @@
                     <p style="color: #888; font-size: 0.75rem; text-transform: uppercase; font-weight: 700;">Puntos Acumulados</p>
                     <h2 id="profile-balance" style="font-size: 2.2rem; font-weight: 900; margin-bottom: 20px; color: var(--accent);">0 Puntos</h2>
 
-                    <div style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; text-align: left;">
-                        <p style="color: #777; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">Tu Nombre de Usuario</p>
-                        <div style="display: flex; gap: 8px;">
-                            <input id="username-input" type="text" maxlength="15" style="flex: 1; min-width: 0; background: #111; border: 1px solid #333; color: white; padding: 10px 8px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; outline: none;">
-                            <button id="btn-save-username" style="flex-shrink: 0; background: var(--accent); color: #000; border: none; padding: 0 14px; border-radius: 10px; font-weight: 900; font-size: 0.7rem; cursor: pointer; white-space: nowrap;">GUARDAR</button>
-                        </div>
-                        <p id="username-status" style="font-size: 0.75rem; margin-top: 6px; min-height: 16px;"></p>
-                    </div>
-
                     <div id="redeem-code-box" style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; text-align: left; display:none;">
                         <p style="color: #777; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">¿Tenés un código de invitación?</p>
                         <div style="display: flex; gap: 8px;">
@@ -399,7 +390,6 @@
             const puntosFormatted = `${data.puntos || 0} Puntos`;
             document.getElementById('profile-balance').innerText = puntosFormatted;
             document.getElementById('header-balance').innerText = puntosFormatted;
-            document.getElementById('username-input').value = data.username;
 
             const code = data.codigo_referido || '---';
             document.getElementById('profile-ref-code').innerText = code;
@@ -464,48 +454,6 @@
                     historyAuth.style.display = 'none';
                     document.getElementById('header-balance').innerText = '0 Puntos';
                 }
-            }
-        });
-
-        // --- GUARDAR NUEVO USERNAME (editable, sin repetidos) ---
-        document.getElementById('btn-save-username').addEventListener('click', async () => {
-            const user = auth.currentUser;
-            if (!user) return;
-            const statusEl = document.getElementById('username-status');
-            const newUsername = slugify(document.getElementById('username-input').value);
-
-            if (newUsername.length < 3) {
-                statusEl.style.color = '#ff4444';
-                statusEl.innerText = 'Mínimo 3 caracteres.';
-                return;
-            }
-
-            const userSnap = await getDoc(doc(db, 'users', user.uid));
-            const oldUsername = userSnap.data().username;
-
-            if (newUsername === oldUsername) {
-                statusEl.style.color = '#888';
-                statusEl.innerText = 'Ese ya es tu username actual.';
-                return;
-            }
-
-            statusEl.style.color = '#888';
-            statusEl.innerText = 'Verificando disponibilidad...';
-
-            try {
-                await claimUsername(newUsername, user.uid);
-                // Liberamos el username viejo y actualizamos el perfil
-                await deleteDoc(doc(db, 'usernames', oldUsername));
-                await setDoc(doc(db, 'users', user.uid), { username: newUsername }, { merge: true });
-
-                statusEl.style.color = 'var(--accent)';
-                statusEl.innerText = '¡Username actualizado!';
-
-                const freshSnap = await getDoc(doc(db, 'users', user.uid));
-                await renderProfile(user, freshSnap.data());
-            } catch (e) {
-                statusEl.style.color = '#ff4444';
-                statusEl.innerText = 'Ese nombre ya está en uso, probá otro.';
             }
         });
 
