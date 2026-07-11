@@ -490,7 +490,8 @@
                 else if (e.message === 'NOT_FOUND') statusEl.innerText = 'Ese código no existe.';
                 else if (e.message === 'SELF') statusEl.innerText = 'No podés usar tu propio código.';
                 else if (e.message === 'INVALID') statusEl.innerText = 'Código inválido.';
-                else statusEl.innerText = 'Error de permisos, avisá al soporte.';
+                else statusEl.innerText = 'Error: ' + (e.code || '') + ' - ' + e.message;
+                console.error('Error real al canjear:', e);
             }
         });
 
