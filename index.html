@@ -91,7 +91,7 @@
         <div class="logo-mobile">NEXUS.SYS</div>
         <div class="balance-chip" onclick="goToProfile()">
             <i class="fas fa-wallet" style="color: var(--accent);"></i>
-            <span id="header-balance">0 Puntos</span>
+            <span id="header-balance">0</span>
         </div>
     </header>
 
@@ -177,7 +177,20 @@
                 <div class="hero"><h1 style="font-size: 1.8rem;">Tu Perfil.</h1><p id="profile-email">Cargando datos...</p></div>
                 <div class="login-container">
                     <p style="color: #888; font-size: 0.75rem; text-transform: uppercase; font-weight: 700;">Puntos Acumulados</p>
-                    <h2 id="profile-balance" style="font-size: 2.2rem; font-weight: 900; margin-bottom: 20px; color: var(--accent);">0 Puntos</h2>
+                    <h2 id="profile-balance" style="font-size: 2.2rem; font-weight: 900; margin-bottom: 15px; color: var(--accent);">0 Puntos</h2>
+
+                    <button onclick="window.location.href='canjear.html'" style="width: 100%; background: var(--accent); color: #000; border: none; padding: 14px; border-radius: 12px; margin-bottom: 20px; font-weight: 900; font-size: 0.85rem; cursor: pointer; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fas fa-gift"></i> Canjear Puntos
+                    </button>
+
+                    <div style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left;">
+                        <p style="color: var(--accent); font-size: 0.75rem; font-weight: 900; text-transform: uppercase; margin-bottom: 10px;">¿Cómo funciona invitar?</p>
+                        <p style="color: #aaa; font-size: 0.8rem; line-height: 1.6;">
+                            1. Compartí tu código con un amigo.<br>
+                            2. Cuando lo canjea en su perfil, gana <strong style="color:#fff">+3 puntos</strong>.<br>
+                            3. Vos ganás <strong style="color:#fff">+5 puntos</strong> automáticamente. Sin límite de invitados.
+                        </p>
+                    </div>
 
                     <div id="redeem-code-box" style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; text-align: left; display:none;">
                         <p style="color: #777; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">¿Tenés un código de invitación?</p>
@@ -391,9 +404,9 @@
 
         // --- PINTA LOS DATOS DEL PERFIL EN PANTALLA ---
         async function renderProfile(user, data) {
-            const puntosFormatted = `${data.puntos || 0} Puntos`;
-            document.getElementById('profile-balance').innerText = puntosFormatted;
-            document.getElementById('header-balance').innerText = puntosFormatted;
+            const puntos = data.puntos || 0;
+            document.getElementById('profile-balance').innerText = `${puntos} Puntos`;
+            document.getElementById('header-balance').innerText = `${puntos}`;
 
             const code = data.codigo_referido || '---';
             document.getElementById('profile-ref-code').innerText = code;
@@ -457,7 +470,7 @@
                     historyGuest.style.display = 'block';
                     profileAuth.style.display = 'none';
                     historyAuth.style.display = 'none';
-                    document.getElementById('header-balance').innerText = '0 Puntos';
+                    document.getElementById('header-balance').innerText = '0';
                 }
             }
         });

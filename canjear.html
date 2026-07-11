@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Canjear Puntos | NEXUS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000000;
+            --card: #111112;
+            --accent: #00ff88;
+            --border: rgba(255,255,255,0.07);
+            --safe-bottom: env(safe-area-inset-bottom);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: white; font-family: 'Outfit', sans-serif; line-height: 1.4; }
+
+        header { padding: 20px; display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
+        .back-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+        .header-title { font-weight: 900; font-size: 1.1rem; }
+        .balance-pill { margin-left: auto; background: var(--card); padding: 6px 14px; border-radius: 100px; border: 1px solid var(--border); font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+
+        #content { padding: 20px; padding-bottom: calc(60px + var(--safe-bottom)); max-width: 600px; margin: 0 auto; }
+        .hero p { color: #888; font-size: 0.9rem; margin-bottom: 20px; }
+        .section-label { font-size: 0.75rem; text-transform: uppercase; color: var(--accent); font-weight: 700; letter-spacing: 1.5px; margin: 25px 0 12px; }
+
+        .reward-card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; }
+        .reward-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+        .reward-info { flex: 1; min-width: 0; }
+        .reward-info strong { display: block; font-size: 0.95rem; }
+        .reward-info span { color: #888; font-size: 0.75rem; }
+        .reward-cost { font-weight: 900; color: var(--accent); font-size: 0.85rem; white-space: nowrap; margin-right: 8px; }
+        .btn-redeem { background: white; color: black; border: none; padding: 10px 16px; border-radius: 50px; font-weight: 900; font-size: 0.75rem; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
+        .btn-redeem:disabled { background: #333; color: #666; cursor: not-allowed; }
+
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .overlay.active { display: flex; }
+        .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 25px; width: 100%; max-width: 340px; }
+        .modal-box h3 { font-weight: 900; margin-bottom: 6px; }
+        .modal-box p { color: #888; font-size: 0.85rem; margin-bottom: 18px; }
+        .modal-box input { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 10px; font-size: 0.9rem; outline: none; margin-bottom: 12px; }
+        .modal-box .btn-submit { width: 100%; background: var(--accent); color: #000; padding: 14px; border-radius: 50px; font-weight: 900; border: none; text-transform: uppercase; font-size: 0.85rem; cursor: pointer; }
+        .modal-cancel { text-align: center; margin-top: 12px; color: #666; font-size: 0.8rem; cursor: pointer; }
+        #modal-status { font-size: 0.8rem; min-height: 16px; margin-top: 8px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="back-btn" onclick="window.location.href='index.html?tab=profile'"><i class="fas fa-arrow-left"></i></div>
+        <div class="header-title">Canjear Puntos</div>
+        <div class="balance-pill"><i class="fas fa-wallet" style="color: var(--accent);"></i> <span id="balance-display">--</span></div>
+    </header>
+
+    <div id="content">
+        <div class="hero">
+            <p>Elegí tu premio. El descuento de puntos es inmediato; la entrega se procesa en las próximas horas.</p>
+        </div>
+
+        <div id="catalog-root"><p style="color:#444; text-align:center; padding-top:20px;">Cargando catálogo...</p></div>
+    </div>
+
+    <!-- MODAL DE CONFIRMACIÓN -->
+    <div class="overlay" id="redeem-modal">
+        <div class="modal-box">
+            <h3 id="modal-title">Confirmar canje</h3>
+            <p id="modal-desc">-- puntos</p>
+            <input id="modal-dato" type="text" placeholder="Ej: ID de jugador o email de la cuenta" maxlength="60">
+            <button class="btn-submit" id="modal-confirm">Confirmar Canje</button>
+            <p id="modal-status"></p>
+            <p class="modal-cancel" id="modal-cancel">Cancelar</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { doc, getDoc, runTransaction, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { auth, db } from './firebase-config.js';
+
+        // --- CATÁLOGO ---
+        // Edita libremente nombres, iconos y "costo" (en puntos) acá.
+        const CATALOG = [
+            {
+                categoria: 'Streaming',
+                items: [
+                    { id: 'netflix_1m', nombre: 'Netflix', detalle: '1 mes', costo: 350, icon: 'fa-solid fa-n', color: '#E50914' },
+                    { id: 'disney_1m', nombre: 'Disney+', detalle: '1 mes', costo: 300, icon: 'fa-solid fa-d', color: '#113CCF' },
+                    { id: 'hbo_1m', nombre: 'HBO Max', detalle: '1 mes', costo: 320, icon: 'fa-solid fa-h', color: '#8b1fd6' },
+                ]
+            },
+            {
+                categoria: 'Diamantes Free Fire',
+                items: [
+                    { id: 'ff_100', nombre: 'Free Fire', detalle: '100 diamantes', costo: 60, icon: 'fa-solid fa-gem', color: '#ff7a00' },
+                    { id: 'ff_310', nombre: 'Free Fire', detalle: '310 diamantes', costo: 160, icon: 'fa-solid fa-gem', color: '#ff7a00' },
+                    { id: 'ff_520', nombre: 'Free Fire', detalle: '520 diamantes', costo: 260, icon: 'fa-solid fa-gem', color: '#ff7a00' },
+                    { id: 'ff_1060', nombre: 'Free Fire', detalle: '1060 diamantes', costo: 500, icon: 'fa-solid fa-gem', color: '#ff7a00' },
+                ]
+            },
+            {
+                categoria: 'Robux',
+                items: [
+                    { id: 'robux_100', nombre: 'Robux', detalle: '100 Robux', costo: 90, icon: 'fa-solid fa-cube', color: '#00a2ff' },
+                    { id: 'robux_500', nombre: 'Robux', detalle: '500 Robux', costo: 380, icon: 'fa-solid fa-cube', color: '#00a2ff' },
+                    { id: 'robux_2000', nombre: 'Robux', detalle: '2000 Robux', costo: 1400, icon: 'fa-solid fa-cube', color: '#00a2ff' },
+                ]
+            }
+        ];
+
+        let currentPuntos = 0;
+        let selectedItem = null;
+        const catalogRoot = document.getElementById('catalog-root');
+        const modal = document.getElementById('redeem-modal');
+
+        function renderCatalog() {
+            let html = '';
+            CATALOG.forEach(cat => {
+                html += `<div class="section-label">${cat.categoria}</div>`;
+                cat.items.forEach(item => {
+                    const puedeCanjear = currentPuntos >= item.costo;
+                    html += `
+                    <div class="reward-card">
+                        <div class="reward-icon" style="background:${item.color}22; color:${item.color};"><i class="${item.icon}"></i></div>
+                        <div class="reward-info">
+                            <strong>${item.nombre}</strong>
+                            <span>${item.detalle}</span>
+                        </div>
+                        <div class="reward-cost">${item.costo} pts</div>
+                        <button class="btn-redeem" data-id="${item.id}" ${puedeCanjear ? '' : 'disabled'}>
+                            ${puedeCanjear ? 'Canjear' : 'Insuf.'}
+                        </button>
+                    </div>`;
+                });
+            });
+            catalogRoot.innerHTML = html;
+
+            catalogRoot.querySelectorAll('.btn-redeem').forEach(btn => {
+                btn.addEventListener('click', () => openModal(btn.dataset.id));
+            });
+        }
+
+        function openModal(itemId) {
+            selectedItem = CATALOG.flatMap(c => c.items).find(i => i.id === itemId);
+            if (!selectedItem) return;
+            document.getElementById('modal-title').innerText = `${selectedItem.nombre} - ${selectedItem.detalle}`;
+            document.getElementById('modal-desc').innerText = `Se descontarán ${selectedItem.costo} puntos de tu cuenta.`;
+            document.getElementById('modal-dato').value = '';
+            document.getElementById('modal-status').innerText = '';
+            document.getElementById('modal-status').style.color = '#888';
+            modal.classList.add('active');
+        }
+
+        document.getElementById('modal-cancel').addEventListener('click', () => modal.classList.remove('active'));
+
+        document.getElementById('modal-confirm').addEventListener('click', async () => {
+            const statusEl = document.getElementById('modal-status');
+            const dato = document.getElementById('modal-dato').value.trim();
+
+            if (!dato) {
+                statusEl.style.color = '#ff4444';
+                statusEl.innerText = 'Completá el dato de entrega (ID / email).';
+                return;
+            }
+            if (!selectedItem) return;
+
+            statusEl.style.color = '#888';
+            statusEl.innerText = 'Procesando...';
+
+            try {
+                await redeemReward(selectedItem, dato);
+                statusEl.style.color = 'var(--accent)';
+                statusEl.innerText = '¡Canjeado! Te lo entregamos en breve.';
+                setTimeout(() => modal.classList.remove('active'), 1200);
+            } catch (e) {
+                statusEl.style.color = '#ff4444';
+                if (e.message === 'INSUFFICIENT_FUNDS') statusEl.innerText = 'No te alcanzan los puntos.';
+                else statusEl.innerText = 'Error: ' + (e.code || e.message || 'desconocido');
+                console.error('Error al canjear premio:', e);
+            }
+        });
+
+        // --- CANJE ATÓMICO: descuenta puntos y registra el pedido ---
+        async function redeemReward(item, dato) {
+            const user = auth.currentUser;
+            if (!user) throw new Error('NO_AUTH');
+
+            const myRef = doc(db, 'users', user.uid);
+            const canjeRef = doc(collection(db, 'canjes'));
+
+            await runTransaction(db, async (transaction) => {
+                const freshMe = await transaction.get(myRef);
+                const puntosActuales = freshMe.data().puntos || 0;
+
+                if (puntosActuales < item.costo) throw new Error('INSUFFICIENT_FUNDS');
+
+                transaction.update(myRef, {
+                    puntos: puntosActuales - item.costo
+                });
+                transaction.set(canjeRef, {
+                    uid: user.uid,
+                    item_id: item.id,
+                    nombre: item.nombre,
+                    detalle: item.detalle,
+                    costo: item.costo,
+                    dato_entrega: dato,
+                    estado: 'pendiente',
+                    fecha: serverTimestamp()
+                });
+            });
+
+            currentPuntos -= item.costo;
+            document.getElementById('balance-display').innerText = currentPuntos;
+            renderCatalog();
+        }
+
+        // --- CARGA INICIAL ---
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            try {
+                const snap = await getDoc(doc(db, 'users', user.uid));
+                currentPuntos = snap.exists() ? (snap.data().puntos || 0) : 0;
+                document.getElementById('balance-display').innerText = currentPuntos;
+                renderCatalog();
+            } catch (error) {
+                catalogRoot.innerHTML = '<p style="color:red; text-align:center; padding-top:20px;">Error al cargar el catálogo: ' + (error.code || error.message) + '</p>';
+            }
+        });
+    </script>
+</body>
+</html>
