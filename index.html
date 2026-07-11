@@ -333,6 +333,7 @@
                 codigo_referido: referralCode,
                 referido_por: null,
                 referido_por_nombre: null,
+                referidos_count: 0,
                 fecha_creacion: serverTimestamp()
             });
 
@@ -373,13 +374,17 @@
 
                 const misPuntos = freshMe.data().puntos || 0;
                 const puntosReferidor = freshReferrer.data().puntos || 0;
+                const countReferidor = freshReferrer.data().referidos_count || 0;
 
                 transaction.update(myRef, {
                     referido_por: referrerUid,
                     referido_por_nombre: code,
                     puntos: misPuntos + 3
                 });
-                transaction.update(referrerRef, { puntos: puntosReferidor + 5 });
+                transaction.update(referrerRef, {
+                    puntos: puntosReferidor + 5,
+                    referidos_count: countReferidor + 1
+                });
             });
 
             return code;
@@ -396,10 +401,9 @@
             document.getElementById('btn-copy-ref').dataset.link = code;
             document.getElementById('btn-share-whatsapp').dataset.link = code;
 
-            // Cuenta real de referidos: usuarios cuyo campo referido_por sea mi uid
-            const refQuery = query(collection(db, 'users'), where('referido_por', '==', user.uid));
-            const refSnap = await getDocs(refQuery);
-            document.getElementById('profile-ref-count').innerText = refSnap.size;
+            // Total de referidos: ahora es un contador directo en tu propio doc
+            // (evita tener que leer documentos de otros usuarios, que las reglas no permiten)
+            document.getElementById('profile-ref-count').innerText = data.referidos_count || 0;
 
             // --- Mostrar canje de código o info de quién te invitó ---
             const redeemBox = document.getElementById('redeem-code-box');
