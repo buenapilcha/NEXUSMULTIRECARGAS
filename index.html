@@ -361,6 +361,7 @@
 
                     if (!userSnap.exists()) {
                         // Primera vez que vemos a este usuario: le creamos el perfil de verdad
+                        alert('DEBUG: pending_ref guardado = "' + localStorage.getItem('pending_ref') + '"');
                         await createUserProfile(user);
                         userSnap = await getDoc(userRef);
                     }
@@ -370,6 +371,7 @@
 
                 } catch (error) {
                     console.error("Error al obtener datos de Firestore:", error);
+                    alert('DEBUG ERROR: ' + error.message);
                 }
                 
             } else {
