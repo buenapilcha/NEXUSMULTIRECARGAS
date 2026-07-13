@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nexus System | Disney+</title>
+    <title>Nexus System | FC Mobile</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
             --bg: #060606;
             --card: #121214;
-            --accent: #0072d2; /* Azul Disney */
+            --accent: #00ff88; /* Verde FC Mobile */
             --border: rgba(255, 255, 255, 0.08);
             --text-main: #ffffff;
             --text-dim: #a0a0a0;
@@ -36,8 +36,7 @@
             -webkit-backdrop-filter: blur(20px);
             z-index: 1000; 
             border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
+            position: sticky; top: 0;
         }
 
         .back-btn { 
@@ -61,18 +60,24 @@
         #content-area::-webkit-scrollbar { display: none; }
 
         .hero-section {
-            padding: 40px 0 25px 0;
+            padding: 40px 0 30px 0;
             text-align: center;
         }
         .hero-icon-box {
             width: 85px; height: 85px;
             margin: 0 auto 15px;
+            background: linear-gradient(135deg, var(--accent), #00a85a);
             border-radius: 26px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 15px 35px rgba(0, 255, 136, 0.3);
             overflow: hidden;
             border: 2px solid rgba(255,255,255,0.1);
         }
-        .hero-icon-box img { width: 100%; height: 100%; object-fit: cover; }
-        
+        .hero-icon-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
         .hero-section h1 { font-size: 2rem; font-weight: 900; }
         .hero-section p { color: var(--text-dim); font-size: 0.9rem; margin-top: 4px; }
 
@@ -94,7 +99,7 @@
         .id-field i { color: #444; font-size: 1.2rem; }
         .id-field input { 
             background: none; border: none; color: white; 
-            font-size: 1rem; font-weight: 600; width: 100%; outline: none;
+            font-size: 1.1rem; font-weight: 600; width: 100%; outline: none;
         }
 
         .packs-grid { 
@@ -107,39 +112,25 @@
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 24px;
-            padding: 22px 12px;
+            padding: 22px 15px;
             text-align: center;
             position: relative;
             transition: 0.3s all ease;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
         }
         .pack-item.selected {
             border-color: var(--accent);
-            background: rgba(0, 114, 210, 0.06);
+            background: rgba(0, 255, 136, 0.03);
             transform: translateY(-5px);
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
-        .pack-item .badge {
-            position: absolute; top: -10px; right: 12px;
-            background: var(--accent); color: white;
-            font-size: 0.6rem; font-weight: 900;
-            padding: 4px 8px; border-radius: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 10px rgba(0, 114, 210, 0.4);
-        }
-        .pack-item strong { display: block; font-size: 1.1rem; font-weight: 900; margin: 8px 0 4px 0; color: #fff; line-height: 1.2; }
-        .pack-item .features { font-size: 0.7rem; color: var(--text-dim); margin-bottom: 12px; font-weight: 600; line-height: 1.4; }
+        .pack-item strong { display: block; font-size: 1.3rem; font-weight: 900; margin: 8px 0; color: #eee; }
         .pack-item .price {
             display: inline-block;
-            font-size: 0.85rem; font-weight: 800; color: var(--text-dim);
+            font-size: 0.85rem; font-weight: 700; color: var(--text-dim);
             background: rgba(255,255,255,0.05);
-            padding: 8px 12px; border-radius: 12px;
-            margin: 0 auto;
+            padding: 6px 12px; border-radius: 12px;
         }
-        .pack-item.selected strong { color: #fff; }
+        .pack-item.selected strong { color: var(--accent); }
         .pack-item.selected .price { background: white; color: black; }
 
         .action-wrapper {
@@ -158,7 +149,6 @@
             box-shadow: 0 15px 40px rgba(255, 255, 255, 0.1);
             cursor: pointer;
         }
-        .btn-pay.active:active { transform: scale(0.96); }
 
         /* --- TAB BAR IDÉNTICA AL INDEX --- */
         .tab-bar { 
@@ -181,7 +171,7 @@
             cursor: pointer; 
         }
         .tab-item.active { 
-            color: var(--accent); /* Mantiene el color original de cada archivo */
+            color: var(--accent); /* Mantiene su propio color verde de acento */
         }
         .tab-item span { 
             display: block; 
@@ -196,7 +186,8 @@
             25% { transform: translateX(-5px); }
             75% { transform: translateX(5px); }
         }
-        .error-shake { animation: shake 0.3s ease-in-out; border-color: var(--accent) !important; }
+        .error-shake { animation: shake 0.3s ease-in-out; border-color: #ff4655 !important; }
+
     </style>
 </head>
 <body>
@@ -212,46 +203,40 @@
     <div id="content-area">
         <section class="hero-section">
             <div class="hero-icon-box">
-                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRMlKONRx-SVrM96kacvmsnXUe6adzX6GW3C_CRgN2HQ&s=10" alt="Disney+">
+                <img src="https://sm.ign.com/ign_br/cover/e/ea-sports-/ea-sports-fc-mobile_c2as.jpg" alt="FC Mobile Logo">
             </div>
-            <h1>Disney+ Premium</h1>
-            <p>Disney, Pixar, Marvel, Star Wars, Nat Geo y Star</p>
+            <h1>FC Mobile</h1>
+            <p>Recarga de FC Points por UID</p>
         </section>
 
         <div class="input-group">
-            <div class="section-title">01. Datos de Entrega</div>
+            <div class="section-title">01. ID del Jugador</div>
             <div class="id-field" id="id-container">
-                <i class="fab fa-whatsapp"></i>
-                <input type="text" id="id-input" placeholder="Tu WhatsApp o Correo electrónico" oninput="validate()">
+                <i class="fas fa-id-card"></i>
+                <input type="text" id="id-input" placeholder="Tu UID de FC Mobile" oninput="validate()">
             </div>
-            <p id="hint" style="font-size: 0.7rem; color: #444; margin: 10px 0 0 5px;">Aquí te enviaremos el usuario y contraseña</p>
+            <p id="hint" style="font-size: 0.7rem; color: #444; margin: 10px 0 0 5px;">Búscalo en la configuración del juego</p>
         </div>
 
         <div class="input-group">
-            <div class="section-title">02. Seleccionar Plan</div>
+            <div class="section-title">02. Seleccionar Pack</div>
             <div class="packs-grid">
-                
-                <!-- PLAN MENSUAL (INICIA SELECCIONADO) -->
-                <div class="pack-item selected" onclick="select(this, 'Plan Mensual Premium (4K UHD)', '$4.500', 'LINK_MP_DISNEY_MENSUAL')">
-                    <div class="badge">RECOMENDADO</div>
-                    <div>
-                        options
-                        <strong>Plan Mensual</strong>
-                        <div class="features">Calidad 4K UHD + HDR<br>Deportes ESPN Total<br>Acceso por 30 días</div>
-                    </div>
-                    <div class="price">$4.500 / mes</div>
+                <div class="pack-item" onclick="select(this, '500 FC Points', '$7.500', 'LINK_MP_1')">
+                    <strong>500 ⚽</strong>
+                    <div class="price">$7.500</div>
                 </div>
-
-                <!-- PLAN ANUAL -->
-                <div class="pack-item" onclick="select(this, 'Plan Anual Premium (4K UHD)', '$39.000', 'LINK_MP_DISNEY_ANUAL')">
-                    <div class="badge" style="background:#00ff88; color:#000;">AHORRO</div>
-                    <div>
-                        <strong>Plan Anual</strong>
-                        <div class="features">Calidad 4K UHD + HDR<br>Deportes ESPN Total<br>Acceso por 12 meses</div>
-                    </div>
-                    <div class="price">$39.000 / año</div>
+                <div class="pack-item" onclick="select(this, '1050 FC Points', '$14.000', 'LINK_MP_2')">
+                    <strong>1050 ⚽</strong>
+                    <div class="price">$14.000</div>
                 </div>
-
+                <div class="pack-item" onclick="select(this, '2200 FC Points', '$28.000', 'LINK_MP_3')">
+                    <strong>2200 ⚽</strong>
+                    <div class="price">$28.000</div>
+                </div>
+                <div class="pack-item" onclick="select(this, '5750 FC Points', '$65.000', 'LINK_MP_4')">
+                    <strong>5750 ⚽</strong>
+                    <div class="price">$65.000</div>
+                </div>
             </div>
         </div>
     </div>
@@ -276,12 +261,7 @@
     </div>
 
     <script>
-        // Sincronizado para iniciar con el plan mensual activo por defecto
-        let pack = { 
-            info: 'Plan Mensual Premium (4K UHD)', 
-            price: '$4.500', 
-            mpLink: 'LINK_MP_DISNEY_MENSUAL' 
-        };
+        let pack = null;
 
         function select(el, info, price, mpLink) {
             document.querySelectorAll('.pack-item').forEach(p => p.classList.remove('selected'));
@@ -291,17 +271,14 @@
         }
 
         function validate() {
-            const id = document.getElementById('id-input').value.trim();
+            const id = document.getElementById('id-input').value;
             const btn = document.getElementById('main-btn');
             const hint = document.getElementById('hint');
-            const isValid = id.length > 5; 
+            const isValid = id.length > 5;
 
             if(id.length > 0) {
-                hint.style.color = isValid ? "#00ff88" : "var(--accent)";
-                hint.innerText = isValid ? "✓ Contacto válido para entrega" : "⚠ Ingresa un WhatsApp o Correo válido";
-            } else {
-                hint.style.color = "#444";
-                hint.innerText = "Aquí te enviaremos el usuario y contraseña";
+                hint.style.color = isValid ? "var(--accent)" : "#ff4655";
+                hint.innerText = isValid ? "✓ ID Detectado" : "⚠ ID incompleto";
             }
 
             if(isValid && pack) {
@@ -326,8 +303,8 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             
             const order = {
-                game: 'Disney+ Premium',
-                id: document.getElementById('id-input').value.trim(),
+                game: 'FC Mobile',
+                id: document.getElementById('id-input').value,
                 pack: pack.info,
                 price: pack.price,
                 mpLink: pack.mpLink,
