@@ -45,7 +45,7 @@
         /* --- CATÁLOGO --- */
         .reward-card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; transition: transform 0.15s ease; }
         .reward-card:active { transform: scale(0.98); }
-        .reward-icon { width: 52px; height: 52px; border-radius: 14px; overflow: hidden; flex-shrink: 0; background: #000; border: 1px solid var(--border); position: relative; }
+        .reward-icon { width: 52px; height: 52px; border-radius: 14px; overflow: hidden; flex-shrink: 0; background: #fff; border: 1px solid var(--border); position: relative; display: flex; align-items: center; justify-content: center; }
         .reward-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .reward-info { flex: 1; min-width: 0; }
         .reward-info strong { display: block; font-size: 0.95rem; }
@@ -63,11 +63,18 @@
         .modal-step.active { display: block; }
         #step-form { text-align: left; }
         #step-form .item-preview { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-        #step-form .item-preview img { width: 46px; height: 46px; border-radius: 12px; object-fit: cover; }
+        #step-form .item-preview img { width: 46px; height: 46px; border-radius: 12px; object-fit: cover; background: #fff; }
         #step-form h3 { font-weight: 900; font-size: 1rem; }
         #step-form .item-preview span { color: #888; font-size: 0.8rem; }
         .modal-box label { display: block; color: #aaa; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+        
         .modal-box input { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 13px; border-radius: 10px; font-size: 0.9rem; outline: none; margin-bottom: 6px; }
+        
+        /* Ocultar flechas del input numérico */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+
         .modal-box .cost-line { display: flex; justify-content: space-between; color: #888; font-size: 0.8rem; margin: 14px 0 18px; padding-top: 14px; border-top: 1px dashed #222; }
         .modal-box .cost-line strong { color: var(--accent); }
         .modal-box .btn-submit { width: 100%; background: var(--accent); color: #000; padding: 14px; border-radius: 50px; font-weight: 900; border: none; text-transform: uppercase; font-size: 0.85rem; cursor: pointer; }
@@ -92,8 +99,8 @@
         #step-success strong { color: #fff; }
         .btn-close-success { width: 100%; background: #1a1a1b; border: 1px solid #333; color: #fff; padding: 14px; border-radius: 50px; font-weight: 800; font-size: 0.85rem; cursor: pointer; text-transform: uppercase; }
 
-        /* --- MODAL HISTORIAL --- */
-        #history-modal .modal-box { max-height: 85vh; display: flex; flex-direction: column; padding: 24px; }
+        /* --- MODAL HISTORIAL & INFO --- */
+        #history-modal .modal-box, #info-modal .modal-box { max-height: 85vh; display: flex; flex-direction: column; padding: 24px; }
         #history-list { overflow-y: auto; flex: 1; text-align: left; margin-bottom: 18px; padding-right: 5px; scrollbar-width: thin; scrollbar-color: #333 transparent; }
         #history-list::-webkit-scrollbar { width: 4px; }
         #history-list::-webkit-scrollbar-thumb { background-color: #333; border-radius: 4px; }
@@ -105,14 +112,19 @@
         .status-completado { background: rgba(0, 255, 136, 0.15); color: var(--accent); border: 1px solid rgba(0, 255, 136, 0.3); }
         .history-item-details { color: #888; font-size: 0.8rem; margin-bottom: 4px; }
         .history-item-footer { color: #555; font-size: 0.75rem; display: flex; justify-content: space-between; }
+        
+        .info-step-card { background: #000; border: 1px solid var(--border); padding: 15px; border-radius: 14px; margin-bottom: 12px; display: flex; gap: 12px; align-items: flex-start; text-align: left; }
+        .info-step-card i { color: var(--accent); font-size: 1.2rem; margin-top: 2px; }
+        .info-step-card div p { color: #aaa; font-size: 0.8rem; margin-top: 4px; }
     </style>
 </head>
 <body>
 
     <header>
         <div class="back-btn" onclick="window.location.href='index.html?tab=profile'"><i class="fas fa-arrow-left"></i></div>
-        <div class="header-title">Canjear Puntos</div>
+        <div class="header-title">Canjear</div>
         <div class="header-actions">
+            <div class="history-btn" id="btn-open-info" title="Cómo funciona"><i class="fas fa-info-circle"></i></div>
             <div class="history-btn" id="btn-open-history" title="Historial de Canjes"><i class="fas fa-history"></i></div>
             <div class="balance-pill"><i class="fas fa-wallet" style="color: var(--accent);"></i> <span id="balance-display">--</span></div>
         </div>
@@ -157,6 +169,7 @@
                     </div>
                 </div>
                 <label id="form-input-label">Dato</label>
+                <!-- Se cambia dinámicamente type="text" o type="number" -->
                 <input id="form-input" type="text" placeholder="">
                 <p id="form-error"></p>
                 <div class="cost-line">
@@ -198,25 +211,56 @@
         </div>
     </div>
 
+    <!-- MODAL INFO / CÓMO FUNCIONA -->
+    <div class="overlay" id="info-modal">
+        <div class="modal-box">
+            <h3 style="margin-bottom: 20px; font-weight: 900;">¿Cómo funciona?</h3>
+            
+            <div class="info-step-card">
+                <i class="fas fa-hand-pointer"></i>
+                <div>
+                    <strong>1. Elegí tu premio</strong>
+                    <p>Navegá por el catálogo y seleccioná el artículo que querés canjear. Asegurate de tener los puntos requeridos en tu balance.</p>
+                </div>
+            </div>
+            <div class="info-step-card">
+                <i class="fas fa-keyboard"></i>
+                <div>
+                    <strong>2. Ingresá tus datos</strong>
+                    <p>El sistema te pedirá un Correo, un Usuario o un ID Numérico (como en Free Fire). Es importante que verifiques que no tenga errores.</p>
+                </div>
+            </div>
+            <div class="info-step-card">
+                <i class="fas fa-rocket"></i>
+                <div>
+                    <strong>3. Entrega segura</strong>
+                    <p>Los puntos se descuentan al instante. El pedido ingresa a nuestra cola y se procesará dentro de las próximas horas. Podés ver el estado tocando el ícono del reloj en la barra superior.</p>
+                </div>
+            </div>
+
+            <button class="btn-close-success" id="btn-close-info" style="margin-top: auto;">Entendido</button>
+        </div>
+    </div>
+
     <script type="module">
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { doc, getDoc, runTransaction, collection, serverTimestamp, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { auth, db } from './firebase-config.js';
 
-        // --- CATÁLOGO ACTUALIZADO ---
+        // --- CATÁLOGO ACTUALIZADO (Precios ajustados e imágenes nuevas) ---
         const CATALOG = [
             {
                 categoria: 'Streaming',
                 items: [
-                    { id: 'netflix_1m', nombre: 'Netflix', detalle: '1 mes', costo: 350, img: 'tarjetas/netflix.png', tipo: 'email' },
-                    { id: 'disney_1m', nombre: 'Disney+', detalle: '1 mes', costo: 300, img: 'tarjetas/disney.png', tipo: 'email' },
-                    { id: 'hbo_1m', nombre: 'HBO Max', detalle: '1 mes', costo: 320, img: 'tarjetas/hbo.png', tipo: 'email' },
+                    { id: 'netflix_1m', nombre: 'Netflix', detalle: '1 mes', costo: 50, img: 'tarjetas/netflix.png', tipo: 'email' },
+                    { id: 'disney_1m', nombre: 'Disney+', detalle: '1 mes', costo: 50, img: 'tarjetas/disney.png', tipo: 'email' },
+                    { id: 'hbo_1m', nombre: 'HBO Max', detalle: '1 mes', costo: 50, img: 'tarjetas/hbo.png', tipo: 'email' },
                 ]
             },
             {
                 categoria: 'Free Fire',
                 items: [
-                    { id: 'ff_pase', nombre: 'Free Fire', detalle: 'Pase Élite', costo: 140, img: 'tarjetas/freefire.png', tipo: 'id' },
+                    { id: 'ff_pase', nombre: 'Free Fire', detalle: 'Pase Élite', costo: 140, img: 'https://play-lh.googleusercontent.com/ImToTp6SJ5uPY7UJ4MHVv8_FVpiojNUdwjCFLXXDmAVihvLIUP9gCizY-j5vhVivFMjxBRJGxyY6ZlKv3Jjj=w240-h480-rw', tipo: 'id' },
                     { id: 'ff_100', nombre: 'Free Fire', detalle: '100 diamantes', costo: 60, img: 'tarjetas/freefire.png', tipo: 'id' },
                     { id: 'ff_310', nombre: 'Free Fire', detalle: '310 diamantes', costo: 160, img: 'tarjetas/freefire.png', tipo: 'id' },
                     { id: 'ff_520', nombre: 'Free Fire', detalle: '520 diamantes', costo: 260, img: 'tarjetas/freefire.png', tipo: 'id' },
@@ -234,7 +278,7 @@
             {
                 categoria: 'Redes Sociales',
                 items: [
-                    { id: 'ig_5k', nombre: 'Instagram', detalle: '5.000 Seguidores', costo: 300, img: 'tarjetas/instagram.png', tipo: 'ig' }
+                    { id: 'ig_5k', nombre: 'Instagram', detalle: '5.000 Seguidores', costo: 500, img: 'https://w7.pngwing.com/pngs/898/267/png-transparent-instagram-notification-follower-mensaje-internet-social-technology-followers-web-mobile-thumbnail.png', tipo: 'ig' }
                 ]
             }
         ];
@@ -244,6 +288,7 @@
         const catalogRoot = document.getElementById('catalog-root');
         const modal = document.getElementById('redeem-modal');
         const historyModal = document.getElementById('history-modal');
+        const infoModal = document.getElementById('info-modal');
 
         function showStep(stepId) {
             document.querySelectorAll('.modal-step').forEach(s => s.classList.remove('active'));
@@ -291,7 +336,7 @@
             const label = document.getElementById('form-input-label');
             input.value = '';
             
-            // Lógica actualizada para el input
+            // Lógica actualizada para el input con protección numérica
             if (selectedItem.tipo === 'email') {
                 label.innerText = 'Correo para recibir la cuenta';
                 input.type = 'email';
@@ -301,8 +346,8 @@
                 input.type = 'text';
                 input.placeholder = '@tu_usuario';
             } else {
-                label.innerText = 'ID de jugador / usuario';
-                input.type = 'text';
+                label.innerText = 'ID de jugador (Solo Números)';
+                input.type = 'number'; // Levanta teclado numérico en móviles
                 input.placeholder = 'Ej: 123456789';
             }
 
@@ -317,6 +362,10 @@
         document.getElementById('modal-cancel').addEventListener('click', closeModal);
         document.getElementById('btn-close-success').addEventListener('click', closeModal);
 
+        // Control de los modales extra
+        document.getElementById('btn-open-info').addEventListener('click', () => infoModal.classList.add('active'));
+        document.getElementById('btn-close-info').addEventListener('click', () => infoModal.classList.remove('active'));
+
         document.getElementById('btn-go-confirm').addEventListener('click', async () => {
             const errorEl = document.getElementById('form-error');
             const dato = document.getElementById('form-input').value.trim();
@@ -327,8 +376,14 @@
                 else errorEl.innerText = 'Ingresá tu ID de jugador.';
                 return;
             }
+            
+            // Validaciones estrictas
             if (selectedItem.tipo === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dato)) {
                 errorEl.innerText = 'Ese correo no parece válido.';
+                return;
+            }
+            if (selectedItem.tipo === 'id' && !/^\d+$/.test(dato)) {
+                errorEl.innerText = 'El ID de jugador solo debe contener números.';
                 return;
             }
             errorEl.innerText = '';
@@ -413,7 +468,6 @@
             if (!user) return;
 
             try {
-                // Buscamos los canjes del usuario (sin orderBy de firebase para evitar errores de índice, ordenamos en JS)
                 const q = query(collection(db, 'canjes'), where('uid', '==', user.uid));
                 const querySnapshot = await getDocs(q);
                 
@@ -427,7 +481,6 @@
                     canjes.push({ id: doc.id, ...doc.data() });
                 });
 
-                // Ordenar del más reciente al más antiguo
                 canjes.sort((a, b) => {
                     const timeA = a.fecha ? a.fecha.toMillis() : Date.now();
                     const timeB = b.fecha ? b.fecha.toMillis() : Date.now();
