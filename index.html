@@ -270,7 +270,7 @@
 
     <script type="module">
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { doc, getDoc, setDoc, deleteDoc, runTransaction, collection, query, where, getDocs, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { doc, getDoc, setDoc, deleteDoc, runTransaction, collection, query, where, getDocs, serverTimestamp, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         
         // Importamos auth y db de tu configuración directamente
         import { auth, db } from './firebase-config.js';
@@ -469,10 +469,16 @@
                     if (!userSnap.exists()) {
                         // Primera vez que vemos a este usuario: le creamos el perfil de verdad
                         await createUserProfile(user);
-                        userSnap = await getDoc(userRef);
                     }
 
-                    await renderProfile(user, userSnap.data());
+                    // onSnapshot escucha los cambios en los puntos y referidos del usuario en tiempo real
+                    onSnapshot(userRef, (docSnapshot) => {
+                        if (docSnapshot.exists()) {
+                            renderProfile(user, docSnapshot.data());
+                        }
+                    });
+
+                    // Llamamos al historial (que ahora también funciona en tiempo real)
                     renderFirestoreOrders(user.uid);
 
                 } catch (error) {
@@ -553,12 +559,12 @@
             window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
         });
 
-        async function renderFirestoreOrders(uid) {
+        function renderFirestoreOrders(uid) {
             const container = document.getElementById('orders-list');
-            try {
-                const q = query(collection(db, 'orders'), where('uid', '==', uid));
-                const querySnapshot = await getDocs(q);
-                
+            const q = query(collection(db, 'orders'), where('uid', '==', uid));
+            
+            // onSnapshot escucha los cambios en la colección en tiempo real
+            onSnapshot(q, (querySnapshot) => {
                 if (querySnapshot.empty) {
                     container.innerHTML = '<p style="color:#444; text-align:center; padding-top:40px;">No hay pedidos registrados.</p>';
                     return;
@@ -567,21 +573,27 @@
                 let html = '';
                 querySnapshot.forEach((docSnap) => {
                     const o = docSnap.data();
+                    // Colores dinámicos según el estado (Opcional, mejora visual)
+                    let colorEstado = 'var(--accent)'; // Por defecto (Completado/Aprobado)
+                    if (o.estado === 'Pendiente') colorEstado = '#ffaa00';
+                    if (o.estado === 'Rechazado') colorEstado = '#ff4444';
+
                     html += `
                     <div class="item-list">
                         <div>
                             <strong>${o.juego || 'Producto'}</strong><br>
                             <small>${o.paquete || '-'} - ID: ${o.id_jugador || '-'}</small>
                         </div>
-                        <div style="color:var(--accent); font-weight:900; font-size:0.6rem; text-transform:uppercase;">
+                        <div style="color:${colorEstado}; font-weight:900; font-size:0.6rem; text-transform:uppercase;">
                             ${o.estado || 'Pendiente'}
                         </div>
                     </div>`;
                 });
                 container.innerHTML = html;
-            } catch (error) {
+            }, (error) => {
+                console.error("Error al escuchar pedidos:", error);
                 container.innerHTML = '<p style="color:red; text-align:center; padding-top:40px;">Error al cargar el historial.</p>';
-            }
+            });
         }
 
         // Lógica de Cerrar Sesión
