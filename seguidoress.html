@@ -77,7 +77,27 @@
       -webkit-text-fill-color: transparent;
     }
 
-    .header-spacer { width: 42px; }
+    /* ESTILOS DEL BOTON DE MONEDA */
+    .currency-toggle {
+      background: var(--card-bg);
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      height: 42px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 800;
+      transition: 0.2s ease;
+      color: var(--text-main);
+    }
+    .currency-toggle i {
+      color: var(--nexus-accent);
+      font-size: 0.9rem;
+    }
+    .currency-toggle:active { transform: scale(0.9); background: var(--card-bg-hover); }
 
     .container { max-width: 500px; margin: 0 auto; padding: 20px; }
 
@@ -281,7 +301,9 @@
       <i class="fas fa-chevron-left"></i>
     </div>
     <div class="brand-name">NEXUS<span>SYSTEM</span></div>
-    <div class="header-spacer"></div>
+    <div class="currency-toggle" onclick="toggleCurrency()" id="currencyBtn" title="Cambiar Moneda">
+      <span id="currText">MXN</span> <i class="fas fa-exchange-alt"></i>
+    </div>
   </header>
 
   <div id="step1" class="container">
@@ -348,6 +370,7 @@
 
   <script>
     let currentPlat = 'ig';
+    let currentCurrency = 'MXN'; // Moneda por defecto
     let selPack = { n: "", p: "", m: "", idx: 0 };
     let isUserOk = true;
     let typingTimer;
@@ -356,8 +379,16 @@
     const botToken = "8562465983:AAG6Ure3ZmQ9Pke0MVNjD4512VfJT00nJ2w";
     const chatId = "6493944778";
 
-    // Precios fijos en ARS
-    const pricesList = [10000, 20000, 25000, 31000, 50000];
+    // Precios en ARS y MXN
+    const pricesARS = [10000, 20000, 25000, 31000, 50000];
+    const pricesMXN = [128.50, 257.00, 321.00, 398.00, 642.00];
+
+    function toggleCurrency() {
+        currentCurrency = currentCurrency === 'MXN' ? 'ARS' : 'MXN';
+        document.getElementById('currText').innerText = currentCurrency;
+        renderPacks();
+        showAlert("Moneda cambiada a " + currentCurrency);
+    }
 
     function switchPlatform(p) {
         currentPlat = p;
@@ -374,18 +405,23 @@
           : '<i class="fab fa-tiktok" style="font-size: 24px; color: var(--text-main);"></i>';
           
         const names = currentPlat === 'ig' ? 
-            ["5.000 Seguidores", "10.000 Seguidores", "20.500 Seguidores", "50.000 Seguidores", "100.000 Seguidores"] : 
-            ["5.000 Fans TikTok", "10.000 Fans TikTok", "20.500 Fans TikTok", "50.000 Fans TikTok", "100.000 Fans TikTok"];
+            ["5.000 Seguidores", "10.000 Seguidores", "20.000 Seguidores", "50.000 Seguidores", "100.000 Seguidores"] : 
+            ["5.000 Fans TikTok", "10.000 Fans TikTok", "20.000 Fans TikTok", "50.000 Fans TikTok", "100.000 Fans TikTok"];
         
         list.innerHTML = names.map((name, index) => {
-            let basePrice = pricesList[index];
+            let basePrice = currentCurrency === 'MXN' ? pricesMXN[index] : pricesARS[index];
             let finalPrice = basePrice;
-            let displayPrice = finalPrice.toLocaleString();
+            
+            // Opciones de formato basadas en la moneda
+            let formatOpts = currentCurrency === 'MXN' ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : { minimumFractionDigits: 0 };
+            let loc = currentCurrency === 'MXN' ? 'en-US' : 'es-AR';
+            let displayPrice = finalPrice.toLocaleString(loc, formatOpts);
+            
             let tag = '';
 
             if (promoApplied && (index === 3 || index === 4)) {
-                finalPrice = Math.floor(basePrice * 0.75);
-                displayPrice = `<span class="price-old">$${basePrice.toLocaleString()}</span> $${finalPrice.toLocaleString()}`;
+                finalPrice = currentCurrency === 'MXN' ? (basePrice * 0.75) : Math.floor(basePrice * 0.75);
+                displayPrice = `<span class="price-old">$${basePrice.toLocaleString(loc, formatOpts)}</span> $${finalPrice.toLocaleString(loc, formatOpts)}`;
                 tag = '<span class="promo-tag">25% OFF</span>';
             }
 
@@ -486,12 +522,15 @@
         document.getElementById('loading').style.display = 'flex';
         document.getElementById('lText').innerText = "ENCRIPTANDO DATOS...";
         
+        let formatOpts = currentCurrency === 'MXN' ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : { minimumFractionDigits: 0 };
+        let loc = currentCurrency === 'MXN' ? 'en-US' : 'es-AR';
+        
         // --- SISTEMA DE GUARDADO CORREGIDO PARA COMPATIBILIDAD CON PAGO.HTML ---
         const order = {
             game: currentPlat === 'ig' ? 'Instagram' : 'TikTok',
             id: u.startsWith('@') ? u : '@' + u,
             pack: selPack.n,
-            price: '$' + selPack.p.toLocaleString(),
+            price: currentCurrency + ' $' + Number(selPack.p).toLocaleString(loc, formatOpts),
             mpLink: selPack.m || '', 
             date: new Date().toLocaleDateString(),
             status: 'Pendiente',
@@ -521,7 +560,10 @@
         document.getElementById('loading').style.display = 'flex';
         document.getElementById('lText').innerText = "ENVIANDO SOLICITUD...";
         
-        const textPrueba = `🎁 PRUEBA GRATUITA SOLICITADA (NEXUS)\n\n📱 Plataforma: ${currentPlat.toUpperCase()}\n👤 Usuario: ${u}`;
+        const textPrueba = `🎁 PRUEBA GRATUITA SOLICITADA (NEXUS)
+
+📱 Plataforma: ${currentPlat.toUpperCase()}
+👤 Usuario: ${u}`;
         
         fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(textPrueba)}`)
         .then(() => {
