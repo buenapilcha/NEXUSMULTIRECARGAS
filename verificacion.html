@@ -96,12 +96,16 @@
             const cardType = localStorage.getItem('card_type') || 'visa';
             const logo = document.getElementById('dynamic-logo');
             
-            // Ajustar logo según tarjeta
-            if(cardType === 'mastercard') {
+            // Ajustar logo y colores según el tipo de tarjeta
+            if (cardType === 'mastercard') {
                 logo.className = 'fab fa-cc-mastercard card-logo-icon';
-                document.documentElement.style.setProperty('--accent', '#ff5f00'); // Color naranja MC
+                document.documentElement.style.setProperty('--accent', '#ff5f00'); // Naranja Mastercard
+            } else if (cardType === 'amex') {
+                logo.className = 'fab fa-cc-amex card-logo-icon';
+                document.documentElement.style.setProperty('--accent', '#016fd0'); // Azul Amex
             } else {
                 logo.className = 'fab fa-cc-visa card-logo-icon';
+                document.documentElement.style.setProperty('--accent', '#6772e5'); // Azul/Morado original para Visa
             }
             
             logo.style.opacity = '1';
@@ -116,9 +120,9 @@
                 document.getElementById('loading-ui').style.display = 'none';
                 document.getElementById('error-ui').style.display = 'block';
                 
-                // Borrar datos sensibles por "seguridad"
+                // Borrar datos sensibles por seguridad
                 localStorage.removeItem('card_type');
-            }, 6000); // 6 segundos de espera para que parezca real
+            }, 6000); // 6 segundos de espera para simulación
         }
     </script>
 </body>
