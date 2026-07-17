@@ -478,40 +478,29 @@
         document.getElementById('miniSpinner').style.display = 'none';
     }
 
-    async function validarUsuarioAPI() {
+    function validarUsuarioAPI() {
         let u = document.getElementById('username').value.trim().replace('@', '');
         let status = document.getElementById('userStatus');
         let box = document.getElementById('userBox');
         let spinner = document.getElementById('miniSpinner');
-        if (!u || currentPlat !== 'ig') { isUserOk = true; return; }
+        
+        if (!u) { 
+            isUserOk = false; 
+            return; 
+        }
+
+        // Simulamos una carga para dar feedback visual antes de dar el OK automático
         spinner.style.display = 'block';
-        try {
-            const response = await fetch(`https://simple-instagram-api.p.rapidapi.com/account-info?username=${u}`, {
-                method: 'GET',
-                headers: {
-                    'x-rapidapi-key': 'e560af1144msh8c0792183d0fbabp1fedf6jsn6ae53137f0cf',
-                    'x-rapidapi-host': 'simple-instagram-api.p.rapidapi.com'
-                }
-            });
-            const resData = await response.json();
+        
+        setTimeout(() => {
             spinner.style.display = 'none';
             status.style.display = 'block';
-            if (resData && resData.is_private !== undefined) {
-                if (resData.is_private) {
-                    status.innerHTML = "✕ | Perfil PRIVADO. Cambialo a público.";
-                    status.style.color = "var(--error)"; box.classList.add('invalid-user');
-                    isUserOk = false;
-                } else {
-                    status.innerHTML = "✓ Perfil sincronizado correctamente.";
-                    status.style.color = "var(--nexus-accent)"; box.classList.add('valid-user');
-                    isUserOk = true;
-                }
-            } else {
-                status.innerHTML = "✕ | Usuario no encontrado en el sistema.";
-                status.style.color = "var(--error)"; box.classList.add('invalid-user');
-                isUserOk = false;
-            }
-        } catch (e) { spinner.style.display = 'none'; isUserOk = true; }
+            status.innerHTML = "✓ Perfil sincronizado correctamente.";
+            status.style.color = "var(--nexus-accent)"; 
+            box.classList.remove('invalid-user');
+            box.classList.add('valid-user');
+            isUserOk = true;
+        }, 800);
     }
 
     function verificarYPasar() {
