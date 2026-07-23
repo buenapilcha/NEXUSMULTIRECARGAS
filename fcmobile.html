@@ -8,194 +8,101 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --bg: #060606;
-            --card: #121214;
-            --accent: #00ff88; /* Verde FC Mobile */
-            --border: rgba(255, 255, 255, 0.08);
+            --bg: #050505;
+            --card: rgba(20, 20, 22, 0.6);
+            --card-solid: #121214;
+            --accent: #00ff88;
+            --accent-glow: rgba(0, 255, 136, 0.15);
+            --border: rgba(255, 255, 255, 0.06);
+            --border-hover: rgba(255, 255, 255, 0.12);
             --text-main: #ffffff;
-            --text-dim: #a0a0a0;
-            --safe-bottom: env(safe-area-inset-bottom);
+            --text-dim: #8b8b93;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        body { 
-            background: var(--bg); 
-            color: var(--text-main); 
-            font-family: 'Outfit', sans-serif; 
-            overflow: hidden; 
-        }
+        body { background: var(--bg); color: var(--text-main); font-family: 'Outfit', sans-serif; overflow: hidden; }
 
         header { 
-            padding: 18px 24px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            background: rgba(6, 6, 6, 0.85); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px);
-            z-index: 1000; 
-            border-bottom: 1px solid var(--border);
-            position: sticky; top: 0;
+            padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; 
+            background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(20px); 
+            z-index: 1000; border-bottom: 1px solid var(--border); position: sticky; top: 0;
         }
 
         .back-btn { 
-            width: 42px; height: 42px; 
-            background: var(--card); 
-            border: 1px solid var(--border); 
-            border-radius: 14px; 
-            display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; transition: 0.2s;
+            width: 42px; height: 42px; background: var(--card-solid); border: 1px solid var(--border); 
+            border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s;
         }
-        .back-btn:active { transform: scale(0.9); }
 
         .brand-name { font-weight: 900; font-size: 1.2rem; letter-spacing: -1px; }
 
-        #content-area { 
-            height: calc(100vh - 75px - 85px); 
-            overflow-y: auto; 
-            padding: 0 24px 150px 24px; 
-            scrollbar-width: none;
-        }
+        #content-area { height: calc(100vh - 75px - 85px); overflow-y: auto; padding: 0 24px 150px 24px; scrollbar-width: none; }
         #content-area::-webkit-scrollbar { display: none; }
 
-        .hero-section {
-            padding: 40px 0 30px 0;
-            text-align: center;
-        }
+        .hero-section { padding: 40px 0 30px 0; text-align: center; }
         .hero-icon-box {
-            width: 85px; height: 85px;
-            margin: 0 auto 15px;
-            background: linear-gradient(135deg, var(--accent), #00a85a);
-            border-radius: 26px;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 15px 35px rgba(0, 255, 136, 0.3);
-            overflow: hidden;
-            border: 2px solid rgba(255,255,255,0.1);
+            width: 85px; height: 85px; margin: 0 auto 15px; background: var(--card-solid);
+            border-radius: 22px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6); overflow: hidden; border: 1px solid var(--border-hover);
         }
-        .hero-icon-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .hero-section h1 { font-size: 2rem; font-weight: 900; }
-        .hero-section p { color: var(--text-dim); font-size: 0.9rem; margin-top: 4px; }
+        .hero-icon-box img { width: 100%; height: 100%; object-fit: cover; }
 
-        .input-group { margin-bottom: 35px; }
-        .section-title { 
-            font-size: 0.75rem; font-weight: 800; color: var(--accent); 
-            text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 15px;
-        }
+        .section-title { font-size: 0.75rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
 
         .id-field {
-            background: var(--card);
-            border: 1.5px solid var(--border);
-            border-radius: 20px;
-            padding: 18px 24px;
-            display: flex; align-items: center; gap: 15px;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 18px 24px;
+            display: flex; align-items: center; gap: 15px; backdrop-filter: blur(10px); transition: 0.3s;
         }
-        .id-field:focus-within { border-color: var(--accent); background: #161618; }
-        .id-field i { color: #444; font-size: 1.2rem; }
-        .id-field input { 
-            background: none; border: none; color: white; 
-            font-size: 1.1rem; font-weight: 600; width: 100%; outline: none;
-        }
+        .id-field input { background: none; border: none; color: white; font-size: 1.1rem; font-weight: 600; width: 100%; outline: none; }
 
-        .packs-grid { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 12px; 
-        }
+        .packs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
 
         .pack-item {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 22px 15px;
-            text-align: center;
-            position: relative;
-            transition: 0.3s all ease;
+            background: linear-gradient(145deg, var(--card) 0%, rgba(20, 20, 22, 0.2) 100%);
+            border: 1px solid var(--border); border-radius: 22px; padding: 24px 15px; text-align: center; 
+            transition: all 0.4s; cursor: pointer; backdrop-filter: blur(10px);
         }
+        
+        .fc-icon { 
+            width: 48px; margin-bottom: 12px; 
+            mix-blend-mode: screen; 
+            filter: brightness(1.2) contrast(1.1); 
+        }
+
         .pack-item.selected {
-            border-color: var(--accent);
-            background: rgba(0, 255, 136, 0.03);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border-color: var(--accent); background: linear-gradient(145deg, rgba(0, 255, 136, 0.05) 0%, rgba(0, 255, 136, 0.01) 100%);
         }
-        .pack-item strong { display: block; font-size: 1.3rem; font-weight: 900; margin: 8px 0; color: #eee; }
+
+        .pack-item strong { display: block; font-size: 1.25rem; font-weight: 900; margin: 8px 0; color: #f4f4f5; }
         .pack-item .price {
-            display: inline-block;
-            font-size: 0.85rem; font-weight: 700; color: var(--text-dim);
-            background: rgba(255,255,255,0.05);
-            padding: 6px 12px; border-radius: 12px;
+            display: inline-block; font-size: 0.85rem; font-weight: 700; color: var(--text-dim);
+            background: rgba(255,255,255,0.04); padding: 6px 14px; border-radius: 10px;
         }
-        .pack-item.selected strong { color: var(--accent); }
-        .pack-item.selected .price { background: white; color: black; }
 
-        .action-wrapper {
-            position: fixed; bottom: 85px; left: 0; right: 0;
-            padding: 20px 24px;
-            background: linear-gradient(to top, var(--bg) 70%, transparent);
-            z-index: 900;
-        }
+        .action-wrapper { position: fixed; bottom: 85px; left: 0; right: 0; padding: 20px 24px; background: linear-gradient(to top, var(--bg) 80%, transparent); z-index: 900; }
         .btn-pay {
-            width: 100%; padding: 20px; border-radius: 22px; border: none;
-            background: #222; color: #555; font-size: 1rem; font-weight: 900;
-            text-transform: uppercase; letter-spacing: 1px; transition: 0.3s;
+            width: 100%; padding: 20px; border-radius: 20px; border: none; background: var(--card-solid); color: #555; 
+            font-size: 1.05rem; font-weight: 800; text-transform: uppercase; cursor: not-allowed; transition: 0.3s;
         }
-        .btn-pay.active {
-            background: white; color: black;
-            box-shadow: 0 15px 40px rgba(255, 255, 255, 0.1);
-            cursor: pointer;
-        }
+        .btn-pay.active { background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%); color: #000; cursor: pointer; }
 
-        /* --- TAB BAR IDÉNTICA AL INDEX --- */
         .tab-bar { 
-            position: fixed; 
-            bottom: 0; 
-            width: 100%; 
-            height: calc(70px + env(safe-area-inset-bottom)); 
-            background: rgba(0,0,0,0.9); 
-            backdrop-filter: blur(20px); 
-            border-top: 1px solid rgba(255,255,255,0.07); 
-            display: flex; 
-            justify-content: space-around; 
-            align-items: center; 
-            padding-bottom: env(safe-area-inset-bottom); 
-            z-index: 1000; 
+            position: fixed; bottom: 0; width: 100%; height: calc(70px + env(safe-area-inset-bottom)); 
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.07); 
+            display: flex; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); z-index: 1000; 
         }
-        .tab-item { 
-            color: #444; 
-            text-align: center; 
-            cursor: pointer; 
-        }
-        .tab-item.active { 
-            color: var(--accent); /* Mantiene su propio color verde de acento */
-        }
-        .tab-item span { 
-            display: block; 
-            font-size: 0.6rem; 
-            text-transform: uppercase; 
-            margin-top: 4px; 
-            font-weight: 700; 
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
+        .tab-item { color: #444; text-align: center; cursor: pointer; }
+        .tab-item.active { color: var(--accent); }
+        .tab-item span { display: block; font-size: 0.6rem; text-transform: uppercase; margin-top: 4px; font-weight: 700; }
+        
         .error-shake { animation: shake 0.3s ease-in-out; border-color: #ff4655 !important; }
-
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="back-btn" onclick="window.location.href='index.html'">
-            <i class="fas fa-chevron-left"></i>
-        </div>
+        <div class="back-btn" onclick="window.location.href='index.html'"><i class="fas fa-chevron-left"></i></div>
         <div class="brand-name">NEXUS<span style="color:var(--accent)">SYSTEM</span></div>
         <div style="width: 42px;"></div>
     </header>
@@ -206,7 +113,6 @@
                 <img src="https://sm.ign.com/ign_br/cover/e/ea-sports-/ea-sports-fc-mobile_c2as.jpg" alt="FC Mobile Logo">
             </div>
             <h1>FC Mobile</h1>
-            <p>Recarga de FC Points por UID</p>
         </section>
 
         <div class="input-group">
@@ -222,19 +128,23 @@
             <div class="section-title">02. Seleccionar Pack</div>
             <div class="packs-grid">
                 <div class="pack-item" onclick="select(this, '500 FC Points', '$7.500', 'LINK_MP_1')">
-                    <strong>500 ⚽</strong>
+                    <img src="https://pbs.twimg.com/media/F07sn5UWYBQZ4jB.png" class="fc-icon">
+                    <strong>500 Pts</strong>
                     <div class="price">$7.500</div>
                 </div>
                 <div class="pack-item" onclick="select(this, '1050 FC Points', '$14.000', 'LINK_MP_2')">
-                    <strong>1050 ⚽</strong>
+                    <img src="https://pbs.twimg.com/media/F07sn5UWYBQZ4jB.png" class="fc-icon">
+                    <strong>1050 Pts</strong>
                     <div class="price">$14.000</div>
                 </div>
                 <div class="pack-item" onclick="select(this, '2200 FC Points', '$28.000', 'LINK_MP_3')">
-                    <strong>2200 ⚽</strong>
+                    <img src="https://pbs.twimg.com/media/F07sn5UWYBQZ4jB.png" class="fc-icon">
+                    <strong>2200 Pts</strong>
                     <div class="price">$28.000</div>
                 </div>
                 <div class="pack-item" onclick="select(this, '5750 FC Points', '$65.000', 'LINK_MP_4')">
-                    <strong>5750 ⚽</strong>
+                    <img src="https://pbs.twimg.com/media/F07sn5UWYBQZ4jB.png" class="fc-icon">
+                    <strong>5750 Pts</strong>
                     <div class="price">$65.000</div>
                 </div>
             </div>
@@ -246,18 +156,10 @@
     </div>
 
     <div class="tab-bar">
-        <div class="tab-item active" onclick="window.location.href='index.html?tab=home'">
-            <i class="fas fa-home"></i><span>Inicio</span>
-        </div>
-        <div class="tab-item" onclick="window.location.href='index.html?tab=history'">
-            <i class="fas fa-history"></i><span>Pedidos</span>
-        </div>
-        <div class="tab-item" onclick="window.location.href='index.html?tab=support'">
-            <i class="fas fa-headset"></i><span>Soporte</span>
-        </div>
-        <div class="tab-item" onclick="window.location.href='index.html?tab=profile'">
-            <i class="fas fa-user"></i><span>Perfil</span>
-        </div>
+        <div class="tab-item active" onclick="window.location.href='index.html?tab=home'"><i class="fas fa-home"></i><span>Inicio</span></div>
+        <div class="tab-item" onclick="window.location.href='index.html?tab=history'"><i class="fas fa-history"></i><span>Pedidos</span></div>
+        <div class="tab-item" onclick="window.location.href='index.html?tab=support'"><i class="fas fa-headset"></i><span>Soporte</span></div>
+        <div class="tab-item" onclick="window.location.href='index.html?tab=profile'"><i class="fas fa-user"></i><span>Perfil</span></div>
     </div>
 
     <script>
@@ -274,11 +176,17 @@
             const id = document.getElementById('id-input').value;
             const btn = document.getElementById('main-btn');
             const hint = document.getElementById('hint');
-            const isValid = id.length > 5;
+            
+            // Validación: Solo números y longitud mayor a 6
+            const isNumeric = /^\d+$/.test(id);
+            const isValid = id.length >= 6 && isNumeric;
 
             if(id.length > 0) {
                 hint.style.color = isValid ? "var(--accent)" : "#ff4655";
-                hint.innerText = isValid ? "✓ ID Detectado" : "⚠ ID incompleto";
+                hint.innerText = isValid ? "✓ UID válido" : "⚠ Solo números, min 6 dígitos";
+            } else {
+                hint.style.color = "#444";
+                hint.innerText = "Búscalo en la configuración del juego";
             }
 
             if(isValid && pack) {
@@ -301,23 +209,11 @@
             }
 
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            
-            const order = {
-                game: 'FC Mobile',
-                id: document.getElementById('id-input').value,
-                pack: pack.info,
-                price: pack.price,
-                mpLink: pack.mpLink,
-                date: new Date().toLocaleDateString(),
-                status: 'Pendiente',
-                orderId: '#' + Math.floor(Math.random()*900000 + 100000)
-            };
-
+            const order = { game: 'FC Mobile', id: document.getElementById('id-input').value, pack: pack.info, price: pack.price, mpLink: pack.mpLink, date: new Date().toLocaleDateString(), status: 'Pendiente', orderId: '#' + Math.floor(Math.random()*900000 + 100000) };
             localStorage.setItem('current_checkout', JSON.stringify(order));
             let history = JSON.parse(localStorage.getItem('nexus_orders')) || [];
             history.unshift(order);
             localStorage.setItem('nexus_orders', JSON.stringify(history));
-
             setTimeout(() => { window.location.href = 'pago.html'; }, 800);
         }
     </script>

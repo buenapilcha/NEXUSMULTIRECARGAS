@@ -8,12 +8,15 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --bg: #060606;
-            --card: #121214;
+            --bg: #050505;
+            --card: rgba(20, 20, 22, 0.6);
+            --card-solid: #121214;
             --accent: #ff4655; /* Rojo Valorant */
-            --border: rgba(255, 255, 255, 0.08);
+            --accent-glow: rgba(255, 70, 85, 0.15);
+            --border: rgba(255, 255, 255, 0.06);
+            --border-hover: rgba(255, 255, 255, 0.12);
             --text-main: #ffffff;
-            --text-dim: #a0a0a0;
+            --text-dim: #8b8b93;
             --safe-bottom: env(safe-area-inset-bottom);
         }
 
@@ -28,58 +31,43 @@
 
         header { 
             padding: 18px 24px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            background: rgba(6, 6, 6, 0.85); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px);
-            z-index: 1000; 
-            border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center; 
+            background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(20px); 
+            z-index: 1000; border-bottom: 1px solid var(--border);
             position: sticky; top: 0;
         }
 
         .back-btn { 
-            width: 42px; height: 42px; 
-            background: var(--card); 
-            border: 1px solid var(--border); 
-            border-radius: 14px; 
+            width: 42px; height: 42px; background: var(--card-solid); 
+            border: 1px solid var(--border); border-radius: 14px; 
             display: flex; align-items: center; justify-content: center; 
             cursor: pointer; transition: 0.2s;
         }
-        .back-btn:active { transform: scale(0.9); }
 
         .brand-name { font-weight: 900; font-size: 1.2rem; letter-spacing: -1px; }
 
         #content-area { 
             height: calc(100vh - 75px - 85px); 
-            overflow-y: auto; 
-            padding: 0 24px 150px 24px; 
+            overflow-y: auto; padding: 0 24px 150px 24px; 
             scrollbar-width: none;
         }
         #content-area::-webkit-scrollbar { display: none; }
 
-        .hero-section {
-            padding: 40px 0 30px 0;
-            text-align: center;
-        }
+        .hero-section { padding: 40px 0 30px 0; text-align: center; }
+        
         .hero-icon-box {
-            width: 85px; height: 85px;
-            margin: 0 auto 15px;
-            background: linear-gradient(135deg, var(--accent), #b32d38);
-            border-radius: 26px;
+            width: 85px; height: 85px; margin: 0 auto 15px;
+            background: var(--card-solid);
+            border-radius: 22px; 
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 15px 35px rgba(255, 70, 85, 0.3);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
             overflow: hidden;
-            border: 2px solid rgba(255,255,255,0.1);
+            border: 1px solid var(--border-hover);
         }
-        .hero-icon-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .hero-section h1 { font-size: 2rem; font-weight: 900; }
-        .hero-section p { color: var(--text-dim); font-size: 0.9rem; margin-top: 4px; }
+        .hero-icon-box img { width: 70%; height: 70%; object-fit: contain; }
+
+        .hero-section h1 { font-size: 1.6rem; font-weight: 800; }
+        .hero-section p { color: var(--text-dim); font-size: 0.95rem; margin-top: 4px; }
 
         .input-group { margin-bottom: 35px; }
         .section-title { 
@@ -88,69 +76,51 @@
         }
 
         .id-field {
-            background: var(--card);
-            border: 1.5px solid var(--border);
-            border-radius: 20px;
-            padding: 18px 24px;
-            display: flex; align-items: center; gap: 15px;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 18px; padding: 18px 24px;
+            display: flex; align-items: center; gap: 15px; transition: 0.3s;
+            backdrop-filter: blur(10px);
         }
-        .id-field:focus-within { border-color: var(--accent); background: #161618; }
+        .id-field:focus-within { border-color: var(--accent); background: rgba(255, 255, 255, 0.03); }
         .id-field i { color: #444; font-size: 1.2rem; }
         .id-field input { 
             background: none; border: none; color: white; 
             font-size: 1.1rem; font-weight: 600; width: 100%; outline: none;
         }
 
-        .packs-grid { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 12px; 
-        }
+        .packs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
 
         .pack-item {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 22px 15px;
-            text-align: center;
-            position: relative;
-            transition: 0.3s all ease;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 22px; padding: 24px 15px; text-align: center; transition: 0.3s;
+            cursor: pointer; backdrop-filter: blur(10px);
         }
         .pack-item.selected {
-            border-color: var(--accent);
-            background: rgba(255, 70, 85, 0.03);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border-color: var(--accent); background: rgba(255, 70, 85, 0.03);
+            transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
-        .pack-item strong { display: block; font-size: 1.3rem; font-weight: 900; margin: 8px 0; color: #eee; }
+        
+        .vp-icon { width: 44px; margin-bottom: 12px; }
+        .pack-item strong { display: block; font-size: 1.25rem; font-weight: 900; margin: 8px 0; color: #eee; }
         .pack-item .price {
-            display: inline-block;
-            font-size: 0.85rem; font-weight: 700; color: var(--text-dim);
-            background: rgba(255,255,255,0.05);
-            padding: 6px 12px; border-radius: 12px;
+            display: inline-block; font-size: 0.85rem; font-weight: 700; color: var(--text-dim);
+            background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 12px;
         }
         .pack-item.selected strong { color: var(--accent); }
         .pack-item.selected .price { background: white; color: black; }
 
         .action-wrapper {
             position: fixed; bottom: 85px; left: 0; right: 0;
-            padding: 20px 24px;
-            background: linear-gradient(to top, var(--bg) 70%, transparent);
-            z-index: 900;
+            padding: 20px 24px; background: linear-gradient(to top, var(--bg) 70%, transparent); z-index: 900;
         }
         .btn-pay {
             width: 100%; padding: 20px; border-radius: 22px; border: none;
             background: #222; color: #555; font-size: 1rem; font-weight: 900;
             text-transform: uppercase; letter-spacing: 1px; transition: 0.3s;
         }
-        .btn-pay.active {
-            background: white; color: black;
-            box-shadow: 0 15px 40px rgba(255, 255, 255, 0.1);
-            cursor: pointer;
-        }
+        .btn-pay.active { background: white; color: black; box-shadow: 0 15px 40px rgba(255, 255, 255, 0.1); }
 
-        /* --- TAB BAR IDÉNTICA AL INDEX --- */
+        /* --- TAB BAR ORIGINAL --- */
         .tab-bar { 
             position: fixed; 
             bottom: 0; 
@@ -171,7 +141,7 @@
             cursor: pointer; 
         }
         .tab-item.active { 
-            color: var(--accent); /* Se mantiene el color acento original de este archivo */
+            color: var(--accent); 
         }
         .tab-item span { 
             display: block; 
@@ -181,21 +151,14 @@
             font-weight: 700; 
         }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
         .error-shake { animation: shake 0.3s ease-in-out; border-color: var(--accent) !important; }
-
     </style>
 </head>
 <body>
 
     <header>
-        <div class="back-btn" onclick="window.location.href='index.html'">
-            <i class="fas fa-chevron-left"></i>
-        </div>
+        <div class="back-btn" onclick="window.location.href='index.html'"><i class="fas fa-chevron-left"></i></div>
         <div class="brand-name">NEXUS<span style="color:var(--accent)">SYSTEM</span></div>
         <div style="width: 42px;"></div>
     </header>
@@ -222,19 +185,23 @@
             <div class="section-title">02. Seleccionar VP</div>
             <div class="packs-grid">
                 <div class="pack-item" onclick="select(this, '500 VP', '$4.500', 'LINK_MP_1')">
-                    <strong>500 💎</strong>
+                    <img src="https://static.wikia.nocookie.net/valorant/images/9/9d/Valorant_Points.png/revision/latest?cb=20200408014952" class="vp-icon">
+                    <strong>500 VP</strong>
                     <div class="price">$4.500</div>
                 </div>
                 <div class="pack-item" onclick="select(this, '1050 VP', '$8.900', 'LINK_MP_2')">
-                    <strong>1050 💎</strong>
+                    <img src="https://static.wikia.nocookie.net/valorant/images/9/9d/Valorant_Points.png/revision/latest?cb=20200408014952" class="vp-icon">
+                    <strong>1050 VP</strong>
                     <div class="price">$8.900</div>
                 </div>
                 <div class="pack-item" onclick="select(this, '2175 VP', '$17.500', 'LINK_MP_3')">
-                    <strong>2175 💎</strong>
+                    <img src="https://static.wikia.nocookie.net/valorant/images/9/9d/Valorant_Points.png/revision/latest?cb=20200408014952" class="vp-icon">
+                    <strong>2175 VP</strong>
                     <div class="price">$17.500</div>
                 </div>
                 <div class="pack-item" onclick="select(this, '4850 VP', '$36.000', 'LINK_MP_4')">
-                    <strong>4850 💎</strong>
+                    <img src="https://static.wikia.nocookie.net/valorant/images/9/9d/Valorant_Points.png/revision/latest?cb=20200408014952" class="vp-icon">
+                    <strong>4850 VP</strong>
                     <div class="price">$36.000</div>
                 </div>
             </div>
