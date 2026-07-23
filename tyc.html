@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal - NEXUS.SYS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #000000;
+            --bg-surface: #0a0a0a;
+            --bg-surface-hover: #171717;
+            --text-primary: #ededed;
+            --text-secondary: #a1a1aa;
+            --border-color: #27272a;
+            --accent: #22c55e;
+            --accent-glow: rgba(34, 197, 94, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Top Navbar */
+        .navbar {
+            position: sticky;
+            top: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 40px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .navbar-logo span {
+            color: var(--text-secondary);
+        }
+
+        /* Main Layout */
+        .container {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px;
+            gap: 60px;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 250px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-nav {
+            position: sticky;
+            top: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .sidebar-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            border-left: 2px solid transparent;
+        }
+
+        .sidebar-nav a:hover {
+            color: var(--text-primary);
+            background-color: var(--bg-surface);
+            border-left-color: var(--border-color);
+        }
+
+        .sidebar-nav a.active {
+            color: var(--accent);
+            background-color: var(--accent-glow);
+            border-left-color: var(--accent);
+        }
+
+        /* Content Area */
+        .content {
+            flex-grow: 1;
+            max-width: 750px;
+        }
+
+        .page-header {
+            margin-bottom: 50px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 10px;
+        }
+
+        .page-meta {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .meta-badge {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        /* Sections */
+        .legal-section {
+            margin-bottom: 60px;
+            scroll-margin-top: 100px;
+        }
+
+        .legal-section h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .legal-section h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 32px;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .legal-section p {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-size: 0.95rem;
+        }
+
+        .legal-section ul {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            padding-left: 24px;
+            font-size: 0.95rem;
+        }
+
+        .legal-section li {
+            margin-bottom: 8px;
+        }
+
+        .legal-section strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Callout / Notice Box */
+        .notice-box {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 24px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .notice-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--accent);
+        }
+
+        .notice-box p {
+            margin: 0;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding: 40px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            background-color: var(--bg-surface);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                padding: 24px;
+                gap: 40px;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-bottom: 1px solid var(--border-color);
+                padding-bottom: 20px;
+            }
+
+            .sidebar-nav {
+                position: static;
+                flex-direction: row;
+                overflow-x: auto;
+                white-space: nowrap;
+                padding-bottom: 8px;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="#" class="navbar-logo">NEXUS<span>.SYS</span></a>
+    </nav>
+
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <a href="#terminos" class="active">Términos y Condiciones</a>
+                <a href="#reembolsos">Política de Reembolsos</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <div class="page-header">
+                <h1 class="page-title">Documentación Legal</h1>
+                <div class="page-meta">
+                    <span class="meta-badge">Efectivo a partir del: 13 de mayo de 2025</span>
+                </div>
+            </div>
+
+            <!-- Sección: Términos y Condiciones -->
+            <section id="terminos" class="legal-section">
+                <h2>Términos y Condiciones de Uso</h2>
+                <p>Bienvenido a <strong>NEXUS.SYS</strong>. Al acceder y utilizar nuestra plataforma para la adquisición de bienes digitales, usted acepta estar sujeto a los presentes términos. Recomendamos su lectura detallada antes de procesar cualquier transacción.</p>
+
+                <h3>1. Naturaleza del Servicio</h3>
+                <p>NEXUS.SYS opera como una plataforma autorizada de distribución de bienes digitales, pines prepagos y recargas directas para ecosistemas de videojuegos y plataformas de streaming. Todos nuestros productos se entregan de forma estrictamente digital.</p>
+
+                <h3>2. Veracidad de Datos y Registro</h3>
+                <p>Para la correcta ejecución de recargas directas, el usuario está obligado a proporcionar con exactitud su "ID de Jugador" (Player ID), "Nombre de Usuario" o el identificador técnico requerido por el respectivo servidor del juego.</p>
+                
+                <div class="notice-box">
+                    <p><strong>Aviso Importante:</strong> La verificación del ID o nombre de usuario ingresado es responsabilidad exclusiva y absoluta del cliente antes de confirmar el procesamiento del pago. NEXUS.SYS no se responsabiliza por errores tipográficos del usuario.</p>
+                </div>
+
+                <h3>3. Precios y Procesamiento de Pagos</h3>
+                <ul>
+                    <li>Los valores expresados en la plataforma están sujetos a modificaciones sin previo aviso, en concordancia con fluctuaciones de divisas y ajustes de los proveedores oficiales.</li>
+                    <li>NEXUS.SYS se reserva el derecho unilateral de rechazar y cancelar transacciones que nuestros sistemas de prevención clasifiquen como de riesgo, sospechosas o potencialmente fraudulentas.</li>
+                    <li>En caso de retención preventiva por auditoría de seguridad, la recarga se mantendrá en estado de pausa hasta la correcta validación de identidad del titular del medio de pago.</li>
+                </ul>
+
+                <h3>4. Disponibilidad y Tiempos de Ejecución</h3>
+                <p>El estándar de nuestra infraestructura garantiza que las recargas y entregas operen de manera <strong>instantánea y automatizada</strong> tras la validación de la pasarela de pagos. No obstante, frente a saturación de redes, mantenimiento de servidores de terceros o demoras interbancarias, la entrega puede demorar excepcionalmente hasta <strong>1 hora</strong>.</p>
+
+                <h3>5. Suspensión de Servicio</h3>
+                <p>Nos reservamos el derecho de revocar permanentemente el acceso a nuestra infraestructura a cualquier usuario o dirección IP involucrada en intentos de fraude, evasión de pagos, contracargos maliciosos o violaciones a la seguridad de la plataforma.</p>
+            </section>
+
+            <!-- Sección: Políticas de Reembolso -->
+            <section id="reembolsos" class="legal-section">
+                <h2>Política de Reembolsos y Devoluciones</h2>
+                <p>Dada la naturaleza irrevocable de los productos digitales e intangibles de consumo inmediato, nuestras directrices de reembolso operan bajo normativas estrictas detalladas a continuación:</p>
+
+                <h3>1. Regla General de No Reembolso</h3>
+                <p>Una vez que el sistema ha acreditado exitosamente una recarga en la cuenta destino especificada, o se ha emitido y visualizado un código/pin digital, <strong>la transacción se considera final, consumida y no elegible para reembolso</strong> por motivos de arrepentimiento u omisión de lectura.</p>
+
+                <h3>2. Responsabilidad por Errores de Destino</h3>
+                <p>Si el usuario suministra un "ID de jugador" erróneo pero válido dentro del ecosistema del juego, y el sistema de NEXUS.SYS ejecuta la recarga exitosamente en dicha cuenta de terceros, <strong>el pedido se catalogará como completado sin posibilidad de reversión o reembolso.</strong> Nuestra plataforma carece de jurisdicción técnica para debitar saldo de cuentas ajenas.</p>
+
+                <h3>3. Excepciones de Reembolso</h3>
+                <p>El equipo financiero solo procesará reversiones de pago ante los siguientes escenarios comprobables:</p>
+                <ul>
+                    <li><strong>Falla de Ejecución:</strong> Si el pago fue procesado correctamente por la pasarela, pero nuestro sistema experimenta un fallo crítico en la entrega y nos resulta imposible completarlo manualmente dentro del plazo de <strong>1 hora (1 hs)</strong>.</li>
+                    <li><strong>Código Comprometido:</strong> Si el usuario recibe un pin digital y demuestra mediante logs que dicho código fue canjeado con anterioridad a la fecha/hora de emisión en nuestra plataforma (sujeto a auditoría de 3 a 5 días hábiles con el proveedor).</li>
+                    <li><strong>Prevención de Fraude:</strong> Transacciones interceptadas y canceladas por nuestra pasarela de seguridad antes de la emisión del producto digital.</li>
+                </ul>
+
+                <h3>4. Procedimiento de Reclamos</h3>
+                <p>Para elevar un caso que cumpla con las excepciones citadas, el usuario deberá generar un ticket de soporte en las primeras 48 horas tras el cargo. Es imperativo adjuntar:</p>
+                <ul>
+                    <li>ID de Transacción / Número de Pedido.</li>
+                    <li>Comprobante de cobro emitido por la entidad bancaria o billetera virtual.</li>
+                    <li>Descripción técnica del incidente.</li>
+                </ul>
+            </section>
+        </main>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 NEXUS.SYS. Todos los derechos reservados.</p>
+        <p style="margin-top: 10px; font-size: 0.75rem;">Todas las marcas registradas, logotipos y nombres comerciales (tales como Free Fire, Valorant, Roblox, etc.) pertenecen a sus respectivos propietarios legales y se emplean en este sitio web de manera justa y exclusiva con fines descriptivos y de identificación del servicio.</p>
+    </footer>
+
+    <script>
+        // Script simple para que el menú lateral resalte la sección activa al hacer scroll
+        const sections = document.querySelectorAll('.legal-section');
+        const navLinks = document.querySelectorAll('.sidebar-nav a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 150) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

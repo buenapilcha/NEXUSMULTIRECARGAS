@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEXUS MOBILE | Global Gaming</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <style>
+        :root {
+            --bg: #000000;
+            --card: #111112;
+            --accent: #00ff88;
+            --border: rgba(255,255,255,0.07);
+            --safe-bottom: env(safe-area-inset-bottom);
+            --google-btn: #1a1a1b;
+        }
+
+        /* RESET & BASE */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: white; font-family: 'Outfit', sans-serif; line-height: 1.4; overscroll-behavior-y: contain; height: 100vh; overflow: hidden; }
+
+        header { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); z-index: 100; border-bottom: 1px solid var(--border); }
+        .logo-mobile { font-weight: 900; font-size: 1.2rem; letter-spacing: -1px; }
+        .balance-chip { background: var(--card); padding: 6px 12px; border-radius: 100px; border: 1px solid var(--border); font-size: 0.8rem; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+
+        /* VISTAS */
+        #content-area { height: calc(100vh - 140px); overflow-y: auto; padding-bottom: 50px; }
+        .view-section { display: none; padding: 20px; animation: fadeIn 0.3s ease; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* COMPONENTES GENERALES */
+        .hero h1 { font-size: 2.2rem; font-weight: 900; line-height: 1.1; margin-bottom: 10px; }
+        .hero p { color: #888; font-size: 0.95rem; margin-bottom: 20px; }
+        .section-label { font-size: 0.75rem; text-transform: uppercase; color: var(--accent); font-weight: 700; letter-spacing: 1.5px; margin-bottom: 15px; margin-top: 10px; }
+        .item-list { background: var(--card); border-radius: 20px; border: 1px solid var(--border); padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+
+        /* ESTILOS REUTILIZABLES PARA TARJETAS / LOGIN */
+        .login-container { background: var(--card); border-radius: 24px; padding: 30px 20px; border: 1px solid var(--border); }
+        .btn-submit { width: 100%; background: white; color: black; padding: 18px; border-radius: 50px; font-weight: 900; border: none; text-transform: uppercase; font-size: 0.9rem; cursor: pointer; }
+
+        /* TAB BAR */
+        .tab-bar { position: fixed; bottom: 0; width: 100%; height: calc(70px + var(--safe-bottom)); background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: var(--safe-bottom); }
+        .tab-item { color: #444; text-align: center; cursor: pointer; }
+        .tab-item.active { color: var(--accent); }
+        .tab-item span { display: block; font-size: 0.6rem; text-transform: uppercase; margin-top: 4px; font-weight: 700; }
+
+        /* OVERLAYS & MODALS */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+
+        /* --- ESTILO DE TARJETA MODERNA (PÓSTER VERTICAL) --- */
+        .game-scroller { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 20px; scrollbar-width: none; }
+        .game-scroller::-webkit-scrollbar { display: none; }
+
+        .poster-card {
+            min-width: 165px;
+            height: 230px;
+            background: var(--card);
+            border-radius: 20px;
+            border: 1.5px solid #ffffff; 
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            transition: transform 0.2s ease;
+        }
+
+        .poster-card:active { transform: scale(0.96); }
+        .poster-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        /* GRID PARA TODOS LOS JUEGOS Y STREAMING */
+        .game-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 10px; margin-bottom: 20px; }
+        
+        .game-item-mini { 
+            height: 200px;
+            background: var(--card); 
+            border: 1.5px solid #ffffff; 
+            border-radius: 20px; 
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer; 
+        }
+        .game-item-mini img { width: 100%; height: 100%; object-fit: cover; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-mobile">NEXUS.SYS</div>
+        <div class="balance-chip" onclick="goToProfile()">
+            <i class="fas fa-wallet" style="color: var(--accent);"></i>
+            <span id="header-balance">0</span>
+        </div>
+    </header>
+
+    <div id="content-area">
+        <section id="view-home" class="view-section active">
+            <div class="hero"><h1>Carga tus<br>juegos.</h1><p>Global / Instantáneo / Seguro</p></div>
+            
+            <div class="section-label">Destacados</div>
+            <div class="game-scroller">
+                <div class="poster-card" onclick="window.location.href='freefire.html'"><img src="tarjetas/freefire.png" alt="Free Fire"></div>
+                <div class="poster-card" onclick="window.location.href='roblox.html'"><img src="tarjetas/roblox.png" alt="Roblox"></div>
+                <div class="poster-card" onclick="window.location.href='brawlstars.html'"><img src="tarjetas/brawlstars.png" alt="Brawl Stars"></div>
+            </div>
+
+            <div class="section-label">Todos los Juegos</div>
+            <div class="game-grid">
+                <div class="game-item-mini" onclick="window.location.href='lol.html'"><img src="tarjetas/lol.png" alt="LoL"></div>
+                <div class="game-item-mini" onclick="window.location.href='valorant.html'"><img src="tarjetas/valorant.png" alt="Valorant"></div>
+                <div class="game-item-mini" onclick="window.location.href='fcmobile.html'"><img src="tarjetas/fcmobile.png" alt="FC Mobile"></div>
+                <div class="game-item-mini" onclick="window.location.href='bloodstrike.html'"><img src="tarjetas/bloodstrike.png" alt="Blood Strike"></div>
+                <div class="game-item-mini" onclick="window.location.href='cs2.html'"><img src="tarjetas/cs2.png" alt="CS2"></div>
+                <div class="game-item-mini" onclick="window.location.href='freefire.html'"><img src="tarjetas/freefire.png" alt="Free Fire"></div>
+            </div>
+
+            <div class="section-label">Streaming</div>
+            <div class="game-grid">
+                <div class="game-item-mini" onclick="window.location.href='netflix.html'"><img src="tarjetas/netflix.png" alt="Netflix"></div>
+                <div class="game-item-mini" onclick="window.location.href='disney.html'"><img src="tarjetas/disney.png" alt="Disney"></div>
+                <div class="game-item-mini" onclick="window.location.href='hbomax.html'"><img src="tarjetas/hbo.png" alt="Hbo Max"></div>
+                <div class="game-item-mini" onclick="window.location.href='seguidoress.html'"><img src="tarjetas/seg.png" alt="Followers"></div>
+                <div class="game-item-mini" onclick="window.location.href='celular.html'"><img src="tarjetas/celular.png" alt="recargas"></div>
+                <div class="game-item-mini" onclick="window.location.href='directv.html'"><img src="tarjetas/directv.png" alt="Directv"></div>
+                <div class="game-item-mini" onclick="window.location.href='play.html'"><img src="tarjetas/play.png" alt="PlayStation"></div>
+            </div>
+
+            <!-- NUEVA SECCIÓN MÉTODOS DE PAGO Y CONFIANZA (Minimalista) -->
+            <div style="margin-top: 45px; padding-top: 30px; border-top: 1px solid var(--border); text-align: center;">
+                <p style="font-size: 0.7rem; font-weight: 800; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px;">Pagos Aceptados</p>
+                
+                <div style="display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 25px;">
+                    <img src="https://d26lpennugtm8s.cloudfront.net/assets/common/img/logos/payment/new_logos_payment/visa@2x.png" alt="Visa" style="height: 22px; opacity: 0.4; filter: grayscale(1);">
+                    <img src="https://d26lpennugtm8s.cloudfront.net/assets/common/img/logos/payment/new_logos_payment/mastercard@2x.png" alt="Mastercard" style="height: 22px; opacity: 0.4; filter: grayscale(1);">
+                    <img src="https://d26lpennugtm8s.cloudfront.net/assets/common/img/logos/payment/new_logos_payment/amex@2x.png" alt="Amex" style="height: 22px; opacity: 0.4; filter: grayscale(1);">
+                    <img src="https://d26lpennugtm8s.cloudfront.net/assets/common/img/logos/payment/new_logos_payment/custom@2x.png" alt="Pago Custom" style="height: 22px; opacity: 0.4; filter: grayscale(1);">
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 15px;">
+                    <i class="fas fa-lock" style="color: #444; font-size: 0.65rem;"></i>
+                    <p style="font-size: 0.65rem; color: #555; font-weight: 600; letter-spacing: 0.5px;">Transacciones encriptadas</p>
+                </div>
+                
+                <!-- ENLACE DISCRETO A TÉRMINOS Y CONDICIONES -->
+                <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
+                    <a href="tyc.html" style="font-size: 0.6rem; color: #444; text-decoration: none; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">Términos y Condiciones</a>
+                </div>
+                
+                <p style="font-size: 0.6rem; color: #333; font-weight: 700; letter-spacing: 1px;">NEXUS.SYS © 2026</p>
+            </div>
+            <!-- FIN SECCIÓN MÉTODOS DE PAGO -->
+
+        </section>
+
+        <section id="view-history" class="view-section">
+            <div id="history-guest-prompt" class="login-container" style="display: none; margin-top: 20px; text-align: center;">
+                <h2 style="font-weight: 900; margin-bottom: 10px;">Acceso Restringido</h2>
+                <p style="color: #888; font-size: 0.9rem; margin-bottom: 25px;">Iniciá sesión para ver el historial de tus compras y pedidos realizados.</p>
+                <button class="btn-submit" onclick="window.location.href='login.html'">Iniciar Sesión</button>
+            </div>
+            
+            <div id="history-auth-data" style="display: none;">
+                <div class="hero"><h1>Pedidos.</h1><p>Historial de transacciones</p></div>
+                <div id="orders-list">
+                    <p style="color:#444; text-align:center; padding-top:40px;">Cargando pedidos...</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-support" class="view-section">
+            <div class="hero"><h1>Soporte.</h1><p>Centro de Ayuda</p></div>
+            <div style="background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 15px; display: flex; align-items: center; gap: 10px; margin-bottom: 25px;">
+                <i class="fas fa-search" style="color: #444;"></i>
+                <input type="text" placeholder="¿En qué podemos ayudarte?" style="background: none; border: none; color: white; width: 100%; outline: none; font-size: 0.9rem;">
+            </div>
+            <div class="section-label">Temas Frecuentes</div>
+            <div class="item-list" onclick="showFaq('Entrega de Pedidos', 'Las recargas suelen tardar de 5 a 15 minutos. En casos de alta demanda, puede demorar hasta 1 hora máximo.')">
+                <div><strong>Mi pedido no llega</strong><br><small style="color:#666">Tiempos de entrega</small></div>
+                <i class="fas fa-chevron-right" style="color: #333; font-size: 0.8rem;"></i>
+            </div>
+            <div class="item-list" onclick="showFaq('Métodos de Pago', 'Aceptamos pagos globales vía tarjeta (USD,ARS) y transferencias locales.')">
+                <div><strong>Métodos de Pago</strong><br><small style="color:#666">Cómo pagar tus pedidos</small></div>
+                <i class="fas fa-chevron-right" style="color: #333; font-size: 0.8rem;"></i>
+            </div>
+            <div class="item-list" onclick="showFaq('Garantía Nexus', 'Nexus utiliza tecnología cifrada para asegurar que cada carga llegue al ID de jugador proporcionado.')">
+                <div><strong>Seguridad y Confianza</strong><br><small style="color:#666">Verificación de procesos</small></div>
+                <i class="fas fa-chevron-right" style="color: #333; font-size: 0.8rem;"></i>
+            </div>
+            <div style="margin-top: 30px; background: #111; border: 1px dashed #333; padding: 25px; border-radius: 20px; text-align: center;">
+                <h3 style="font-size: 1rem; margin-bottom: 5px;">¿Aún necesitas ayuda?</h3>
+                <p style="color: #666; font-size: 0.8rem; margin-bottom: 20px;">Abre un ticket para atención personalizada.</p>
+                <button onclick="window.location.href='https://wa.me/2477399308'" style="background: white; color: black; border: none; padding: 12px 25px; border-radius: 100px; font-weight: 800; font-size: 0.8rem;">ABRIR TICKET</button>
+            </div>
+        </section>
+
+        <section id="view-profile" class="view-section">
+            <div id="profile-guest-prompt" class="login-container" style="display: none; margin-top: 20px; text-align: center;">
+                <h2 style="font-weight: 900; margin-bottom: 10px;">Cuenta Requerida</h2>
+                <p style="color: #888; font-size: 0.9rem; margin-bottom: 25px;">Iniciá sesión para ver tu saldo, gestionar referidos y obtener beneficios exclusivos.</p>
+                <button class="btn-submit" onclick="window.location.href='login.html'">Iniciar Sesión</button>
+            </div>
+
+            <div id="profile-auth-data" style="display: none;">
+                <div class="hero"><h1 style="font-size: 1.8rem;">Tu Perfil.</h1><p id="profile-email">Cargando datos...</p></div>
+                <div class="login-container">
+                    <p style="color: #888; font-size: 0.75rem; text-transform: uppercase; font-weight: 700;">Puntos Acumulados</p>
+                    <h2 id="profile-balance" style="font-size: 2.2rem; font-weight: 900; margin-bottom: 15px; color: var(--accent);">0 Puntos</h2>
+
+                    <button onclick="window.location.href='canjear.html'" style="width: 100%; background: var(--accent); color: #000; border: none; padding: 14px; border-radius: 12px; margin-bottom: 20px; font-weight: 900; font-size: 0.85rem; cursor: pointer; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fas fa-gift"></i> Canjear Puntos
+                    </button>
+
+                    <div style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left;">
+                        <p style="color: var(--accent); font-size: 0.75rem; font-weight: 900; text-transform: uppercase; margin-bottom: 10px;">¿Cómo funciona invitar?</p>
+                        <p style="color: #aaa; font-size: 0.8rem; line-height: 1.6;">
+                            1. Compartí tu código con un amigo.<br>
+                            2. Cuando lo canjea en su perfil, gana <strong style="color:#fff">+3 puntos</strong>.<br>
+                            3. Vos ganás <strong style="color:#fff">+5 puntos</strong> automáticamente. Sin límite de invitados.
+                        </p>
+                    </div>
+
+                    <div id="redeem-code-box" style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; text-align: left; display:none;">
+                        <p style="color: #777; font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;">¿Tenés un código de invitación?</p>
+                        <div style="display: flex; gap: 8px;">
+                            <input id="redeem-code-input" type="text" maxlength="6" placeholder="Ej: 8HGT2K" style="flex: 1; min-width: 0; background: #111; border: 1px solid #333; color: white; padding: 10px 8px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; outline: none; text-transform: uppercase;">
+                            <button id="btn-redeem-code" style="flex-shrink: 0; background: var(--accent); color: #000; border: none; padding: 0 14px; border-radius: 10px; font-weight: 900; font-size: 0.7rem; cursor: pointer; white-space: nowrap;">CANJEAR</button>
+                        </div>
+                        <p id="redeem-status" style="font-size: 0.75rem; margin-top: 6px; min-height: 16px;"></p>
+                    </div>
+
+                    <div id="redeemed-info" style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; text-align: left; display:none;">
+                        <p style="color: #777; font-size: 0.75rem; font-weight: 600;">Invitado por</p>
+                        <p id="redeemed-by" style="font-size: 0.9rem; font-weight: 900; color: var(--accent);">---</p>
+                    </div>
+
+                    <div style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 12px; text-align: left; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" id="btn-copy-ref">
+                        <div>
+                            <p style="color: #777; font-size: 0.75rem; font-weight: 600; margin-bottom: 2px;">Tu Código de Invitación</p>
+                            <p id="profile-ref-code" style="font-size: 1.3rem; font-weight: 900; letter-spacing: 2px;">---</p>
+                        </div>
+                        <i class="fas fa-copy" style="color: #444; font-size: 1.2rem; flex-shrink: 0; margin-left: 10px;"></i>
+                    </div>
+
+                    <button id="btn-share-whatsapp" style="width: 100%; background: #111; border: 1px solid #222; color: white; padding: 12px; border-radius: 12px; margin-bottom: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fab fa-whatsapp" style="color: #25D366;"></i> Compartir por WhatsApp
+                    </button>
+
+                    <div style="background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; margin-bottom: 25px; text-align: left; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <p style="color: #777; font-size: 0.75rem; font-weight: 600; margin-bottom: 2px;">Total Referidos</p>
+                            <p id="profile-ref-count" style="font-size: 1.1rem; font-weight: 900;">0</p>
+                        </div>
+                        <i class="fas fa-users" style="color: #444; font-size: 1.2rem;"></i>
+                    </div>
+
+                    <button id="btn-logout" class="btn-submit" style="background: #111; color: white; border: 1px solid #333;">CERRAR SESIÓN</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="tab-bar">
+        <div class="tab-item active" onclick="changeTab('home', this)"><i class="fas fa-home"></i><span>Inicio</span></div>
+        <div class="tab-item" onclick="changeTab('history', this)"><i class="fas fa-history"></i><span>Pedidos</span></div>
+        <div class="tab-item" onclick="changeTab('support', this)"><i class="fas fa-headset"></i><span>Soporte</span></div>
+        <div class="tab-item" onclick="changeTab('profile', this)"><i class="fas fa-user"></i><span>Perfil</span></div>
+    </div>
+
+    <div id="faq-modal" class="overlay" onclick="closeFaq()">
+        <div class="login-container" style="max-width: 90%; width: 350px; position: relative;" onclick="event.stopPropagation()">
+            <h3 id="faq-title" style="color:var(--accent); margin-bottom:15px; font-weight:900;"></h3>
+            <p id="faq-text" style="color:#ccc; font-size:0.9rem; line-height:1.6;"></p>
+            <button class="btn-submit" style="margin-top:20px; padding:12px;" onclick="closeFaq()">CERRAR</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { doc, getDoc, setDoc, deleteDoc, runTransaction, collection, query, where, getDocs, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
+        // Importamos auth y db de tu configuración directamente
+        import { auth, db } from './firebase-config.js';
+
+        const profileGuest = document.getElementById('profile-guest-prompt');
+        const profileAuth = document.getElementById('profile-auth-data');
+        const historyGuest = document.getElementById('history-guest-prompt');
+        const historyAuth = document.getElementById('history-auth-data');
+
+        // --- CONVIERTE UN NOMBRE EN UN USERNAME VÁLIDO (solo minúsculas, números, sin espacios/acentos) ---
+        function slugify(text) {
+            return (text || 'user')
+                .toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // saca acentos
+                .replace(/[^a-z0-9]/g, '')
+                .substring(0, 15) || 'user';
+        }
+
+        // --- RESERVA UN USERNAME DE FORMA ATÓMICA (evita que dos personas se queden con el mismo al mismo tiempo) ---
+        // Usa la colección "usernames" como índice: el ID del documento ES el username,
+        // así Firestore garantiza que no pueda haber dos iguales.
+        async function claimUsername(username, uid) {
+            const refDoc = doc(db, 'usernames', username);
+            return await runTransaction(db, async (transaction) => {
+                const snap = await transaction.get(refDoc);
+                if (snap.exists()) {
+                    throw new Error('TAKEN');
+                }
+                transaction.set(refDoc, { uid: uid });
+                return true;
+            });
+        }
+
+        // --- GENERA UN CÓDIGO DE INVITACIÓN ALEATORIO (6 caracteres, sin letras/números confusos) ---
+        function randomReferralCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin 0/O/1/I
+            let code = '';
+            for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+            return code;
+        }
+
+        // --- RESERVA UN CÓDIGO DE INVITACIÓN DE FORMA ATÓMICA (fijo, no cambia aunque cambies el username) ---
+        // Usa la colección "referral_codes" como índice propio, separado de "usernames".
+        async function claimReferralCode(code, uid) {
+            const refDoc = doc(db, 'referral_codes', code);
+            return await runTransaction(db, async (transaction) => {
+                const snap = await transaction.get(refDoc);
+                if (snap.exists()) {
+                    throw new Error('TAKEN');
+                }
+                transaction.set(refDoc, { uid: uid });
+                return true;
+            });
+        }
+
+        // --- CREA EL PERFIL LA PRIMERA VEZ QUE SE LOGUEA (con username único + referido si vino de un link) ---
+        async function createUserProfile(user) {
+            let baseUsername = slugify(user.displayName || user.email.split('@')[0]);
+            let finalUsername = baseUsername;
+            let attempts = 0;
+
+            // Si el username base ya existe, le agregamos números hasta encontrar uno libre
+            while (attempts < 8) {
+                try {
+                    await claimUsername(finalUsername, user.uid);
+                    break;
+                } catch (e) {
+                    attempts++;
+                    finalUsername = baseUsername + Math.floor(100 + Math.random() * 900);
+                }
+            }
+
+            // Cada cuenta nueva recibe automáticamente un código de invitación propio y fijo
+            // (no cambia aunque después edites tu username)
+            let referralCode = randomReferralCode();
+            let rAttempts = 0;
+            while (rAttempts < 8) {
+                try {
+                    await claimReferralCode(referralCode, user.uid);
+                    break;
+                } catch (e) {
+                    rAttempts++;
+                    referralCode = randomReferralCode();
+                }
+            }
+
+            // Toda cuenta nueva arranca en 0 puntos, sin referido.
+            // El referido ahora se canjea a mano desde el perfil (ver redeemReferralCode).
+            const newUserRef = doc(db, 'users', user.uid);
+            await setDoc(newUserRef, {
+                username: finalUsername,
+                email: user.email,
+                puntos: 0,
+                codigo_referido: referralCode,
+                referido_por: null,
+                referido_por_nombre: null,
+                referidos_count: 0,
+                fecha_creacion: serverTimestamp()
+            });
+
+            return finalUsername;
+        }
+
+        // --- CANJEA UN CÓDIGO DE INVITACIÓN (código propio de otra cuenta) ---
+        // Se puede usar una sola vez por cuenta. Transacción atómica:
+        // vos sumás 3 puntos, quien te invitó suma 5, todo junto o nada.
+        async function redeemReferralCode(rawCode) {
+            const user = auth.currentUser;
+            if (!user) throw new Error('NO_AUTH');
+
+            const code = (rawCode || '').toUpperCase().trim();
+            if (!code) throw new Error('INVALID');
+
+            const myRef = doc(db, 'users', user.uid);
+            const myFreshSnap = await getDoc(myRef);
+            const myData = myFreshSnap.data();
+
+            if (myData.referido_por) throw new Error('ALREADY_REDEEMED');
+            if (code === myData.codigo_referido) throw new Error('SELF');
+
+            const codeSnap = await getDoc(doc(db, 'referral_codes', code));
+            if (!codeSnap.exists()) throw new Error('NOT_FOUND');
+
+            const referrerUid = codeSnap.data().uid;
+            if (referrerUid === user.uid) throw new Error('SELF');
+
+            const referrerRef = doc(db, 'users', referrerUid);
+
+            await runTransaction(db, async (transaction) => {
+                // Solo leemos NUESTRO propio documento (permitido por las reglas).
+                // Del documento del referidor NO leemos nada: usamos increment(),
+                // que suma en el servidor sin necesitar el valor actual.
+                const freshMe = await transaction.get(myRef);
+
+                if (freshMe.data().referido_por) throw new Error('ALREADY_REDEEMED');
+
+                const misPuntos = freshMe.data().puntos || 0;
+
+                transaction.update(myRef, {
+                    referido_por: referrerUid,
+                    referido_por_nombre: code,
+                    puntos: misPuntos + 3
+                });
+                transaction.update(referrerRef, {
+                    puntos: increment(5),
+                    referidos_count: increment(1)
+                });
+            });
+
+            return code;
+        }
+
+        // --- PINTA LOS DATOS DEL PERFIL EN PANTALLA ---
+        async function renderProfile(user, data) {
+            const puntos = data.puntos || 0;
+            document.getElementById('profile-balance').innerText = `${puntos} Puntos`;
+            document.getElementById('header-balance').innerText = `${puntos}`;
+
+            const code = data.codigo_referido || '---';
+            document.getElementById('profile-ref-code').innerText = code;
+            document.getElementById('btn-copy-ref').dataset.link = code;
+            document.getElementById('btn-share-whatsapp').dataset.link = code;
+
+            // Total de referidos: ahora es un contador directo en tu propio doc
+            // (evita tener que leer documentos de otros usuarios, que las reglas no permiten)
+            document.getElementById('profile-ref-count').innerText = data.referidos_count || 0;
+
+            // --- Mostrar canje de código o info de quién te invitó ---
+            const redeemBox = document.getElementById('redeem-code-box');
+            const redeemedInfo = document.getElementById('redeemed-info');
+            if (data.referido_por) {
+                redeemBox.style.display = 'none';
+                redeemedInfo.style.display = 'block';
+                document.getElementById('redeemed-by').innerText = data.referido_por_nombre || '---';
+            } else {
+                redeemedInfo.style.display = 'none';
+                redeemBox.style.display = 'block';
+            }
+        }
+
+        // Escuchador de estado
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // EL USUARIO ESTÁ LOGUEADO
+                profileGuest.style.display = 'none';
+                historyGuest.style.display = 'none';
+                profileAuth.style.display = 'block';
+                historyAuth.style.display = 'block';
+
+                document.getElementById('profile-email').innerText = user.email;
+
+                try {
+                    const userRef = doc(db, 'users', user.uid);
+                    let userSnap = await getDoc(userRef);
+
+                    if (!userSnap.exists()) {
+                        // Primera vez que vemos a este usuario: le creamos el perfil de verdad
+                        await createUserProfile(user);
+                        userSnap = await getDoc(userRef);
+                    }
+
+                    await renderProfile(user, userSnap.data());
+                    renderFirestoreOrders(user.uid);
+
+                } catch (error) {
+                    console.error("Error al obtener datos de Firestore:", error);
+                    document.getElementById('profile-email').innerText =
+                        'Error al cargar perfil: ' + (error.code || error.message || 'desconocido');
+                }
+                
+            } else {
+                // EL USUARIO NO ESTÁ LOGUEADO
+                const isGuest = localStorage.getItem('modo_invitado');
+                if (!isGuest) {
+                    window.location.href = 'login.html';
+                } else {
+                    profileGuest.style.display = 'block';
+                    historyGuest.style.display = 'block';
+                    profileAuth.style.display = 'none';
+                    historyAuth.style.display = 'none';
+                    document.getElementById('header-balance').innerText = '0';
+                }
+            }
+        });
+
+        // --- CANJEAR CÓDIGO DE INVITACIÓN ---
+        document.getElementById('btn-redeem-code').addEventListener('click', async () => {
+            const statusEl = document.getElementById('redeem-status');
+            const input = document.getElementById('redeem-code-input');
+            const code = input.value.trim();
+
+            if (!code) {
+                statusEl.style.color = '#ff4444';
+                statusEl.innerText = 'Ingresá un código.';
+                return;
+            }
+
+            statusEl.style.color = '#888';
+            statusEl.innerText = 'Verificando...';
+
+            try {
+                await redeemReferralCode(code);
+                statusEl.style.color = 'var(--accent)';
+                statusEl.innerText = '¡Código canjeado! +3 puntos';
+
+                const user = auth.currentUser;
+                const freshSnap = await getDoc(doc(db, 'users', user.uid));
+                await renderProfile(user, freshSnap.data());
+            } catch (e) {
+                statusEl.style.color = '#ff4444';
+                if (e.message === 'ALREADY_REDEEMED') statusEl.innerText = 'Ya usaste un código antes.';
+                else if (e.message === 'NOT_FOUND') statusEl.innerText = 'Ese código no existe.';
+                else if (e.message === 'SELF') statusEl.innerText = 'No podés usar tu propio código.';
+                else if (e.message === 'INVALID') statusEl.innerText = 'Código inválido.';
+                else statusEl.innerText = 'Error: ' + (e.code || '') + ' - ' + e.message;
+                console.error('Error real al canjear:', e);
+            }
+        });
+
+        // --- COPIAR LINK DE INVITACIÓN ---
+        document.getElementById('btn-copy-ref').addEventListener('click', function () {
+            const link = this.dataset.link;
+            if (!link) return;
+            navigator.clipboard.writeText(link).then(() => {
+                const statusIcon = this.querySelector('i');
+                statusIcon.className = 'fas fa-check';
+                statusIcon.style.color = 'var(--accent)';
+                setTimeout(() => {
+                    statusIcon.className = 'fas fa-copy';
+                    statusIcon.style.color = '#444';
+                }, 1500);
+            });
+        });
+
+        // --- COMPARTIR CÓDIGO DE INVITACIÓN POR WHATSAPP ---
+        document.getElementById('btn-share-whatsapp').addEventListener('click', function () {
+            const code = this.dataset.link;
+            if (!code) return;
+            const mensaje = `¡Sumate a Nexus y cargá tus juegos al toque! Registrate y usá mi código de invitación en tu perfil: ${code}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
+        });
+
+        async function renderFirestoreOrders(uid) {
+            const container = document.getElementById('orders-list');
+            try {
+                const q = query(collection(db, 'orders'), where('uid', '==', uid));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    container.innerHTML = '<p style="color:#444; text-align:center; padding-top:40px;">No hay pedidos registrados.</p>';
+                    return;
+                }
+
+                let html = '';
+                querySnapshot.forEach((docSnap) => {
+                    const o = docSnap.data();
+                    html += `
+                    <div class="item-list">
+                        <div>
+                            <strong>${o.juego || 'Producto'}</strong><br>
+                            <small>${o.paquete || '-'} - ID: ${o.id_jugador || '-'}</small>
+                        </div>
+                        <div style="color:var(--accent); font-weight:900; font-size:0.6rem; text-transform:uppercase;">
+                            ${o.estado || 'Pendiente'}
+                        </div>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            } catch (error) {
+                container.innerHTML = '<p style="color:red; text-align:center; padding-top:40px;">Error al cargar el historial.</p>';
+            }
+        }
+
+        // Lógica de Cerrar Sesión
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            auth.signOut().then(() => {
+                localStorage.removeItem('modo_invitado');
+                window.location.href = 'login.html';
+            });
+        });
+
+        // EXPOSICIÓN DE FUNCIONES
+        window.changeTab = function(viewId, el) {
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+            el.classList.add('active');
+        };
+
+        window.goToProfile = function() {
+            window.changeTab('profile', document.querySelectorAll('.tab-item')[3]);
+        };
+
+        window.showFaq = function(titulo, texto) {
+            document.getElementById('faq-title').innerText = titulo;
+            document.getElementById('faq-text').innerText = texto;
+            document.getElementById('faq-modal').style.display = 'flex';
+        };
+
+        window.closeFaq = function() {
+            document.getElementById('faq-modal').style.display = 'none';
+        };
+
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            const tab = params.get('tab');
+            if (tab) {
+                const tabIndices = { 'home': 0, 'history': 1, 'support': 2, 'profile': 3 };
+                const index = tabIndices[tab];
+                const targetTabItem = document.querySelectorAll('.tab-item')[index];
+                if (targetTabItem) window.changeTab(tab, targetTabItem);
+            }
+        };
+    </script>
+</body>
+</html>
